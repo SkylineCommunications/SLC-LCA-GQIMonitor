@@ -1,12 +1,12 @@
+﻿using MetricsDataSource_1.Caches;
+using Skyline.DataMiner.Analytics.GenericInterface;
+using System;
+using System.Linq;
+
 namespace MetricsDataSource_1.DataSources
 {
-    using MetricsDataSource_1.Caches;
-    using Skyline.DataMiner.Analytics.GenericInterface;
-    using System;
-    using System.Linq;
-
-    [GQIMetaData(Name = "GQI Monitor - Request durations")]
-    public sealed class MetricsDataSource : IGQIDataSource, IGQIOnInit, IGQIInputArguments
+    [GQIMetaData(Name = "GQI Monitor - Logs")]
+    public sealed class LogsDataSource : IGQIDataSource, IGQIOnInit, IGQIInputArguments
     {
         private IGQILogger _logger;
 
@@ -64,31 +64,26 @@ namespace MetricsDataSource_1.DataSources
 
 
         private static readonly GQIDateTimeColumn _timeColumn = new GQIDateTimeColumn("Time");
-        private static readonly GQIStringColumn _requestColumn = new GQIStringColumn("Request");
-        private static readonly GQIStringColumn _userColumn = new GQIStringColumn("User");
-        //private static readonly GQITimeSpanColumn _durationColumn = new GQITimeSpanColumn("Duration");
-        private static readonly GQIIntColumn _durationColumn = new GQIIntColumn("Duration (ms)");
+        private static readonly GQIStringColumn _levelColumn = new GQIStringColumn("Level");
+        private static readonly GQIStringColumn _messageColumn = new GQIStringColumn("Message");
+        private static readonly GQIIntColumn _requestIdColumn = new GQIIntColumn("Request ID");
 
         public GQIColumn[] GetColumns()
         {
             return new GQIColumn[]
             {
                 _timeColumn,
-                _requestColumn,
-                _userColumn,
-                _durationColumn,
+                _levelColumn,
+                _messageColumn,
+                _requestIdColumn,
             };
         }
 
         public GQIPage GetNextPage(GetNextPageInputArgs args)
         {
-            var context = new MetricsCache.Context(_logger)
-            {
-                Provider = _provider,
-                MaxCacheAge = _maxCacheAge,
-            };
-            var metrics = Cache.Instance.Metrics.GetMetrics(context);
-            var rows = metrics.RequestDurations
+            var logFolderPath = @"C:\Skyline DataMiner\Logging\GQI";
+            var logs = LogCollection.Parse(logFolderPath, _logger).Logs;
+            var rows = logs
                 .Select(ToRow)
                 .ToArray();
 
@@ -98,16 +93,17 @@ namespace MetricsDataSource_1.DataSources
             };
         }
 
-        private GQIRow ToRow(RequestDurationMetric metric)
+        private GQIRow ToRow(LogCollection.Log log)
         {
             var cells = new[]
             {
-                new GQICell { Value = metric.Time },
-                new GQICell { Value = metric.Request },
-                new GQICell { Value = metric.User },
-                new GQICell { Value = metric.Duration.Milliseconds },
+                new GQICell { Value = log.Time },
+                new GQICell { Value = log.Level },
+                new GQICell { Value = log.Message },
+                new GQICell { Value = log.RequestId },
             };
             return new GQIRow(cells);
         }
+
     }
 }

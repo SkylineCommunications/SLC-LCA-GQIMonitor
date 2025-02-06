@@ -3,10 +3,18 @@ using Skyline.DataMiner.Analytics.GenericInterface;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace MetricsDataSource_1
 {
-    internal sealed class MetricCollection
+    internal interface IMetricCollection
+    {
+        IEnumerable<RequestDurationMetric> RequestDurations { get; }
+        IEnumerable<FirstPageDurationMetric> FirstPageDurations { get; }
+        IEnumerable<AllPagesDurationMetric> AllPagesDurations { get; }
+    }
+
+    internal sealed class MetricCollection : IMetricCollection
     {
         public static MetricCollection Parse(string directoryPath, IGQILogger logger)
         {
@@ -15,7 +23,7 @@ namespace MetricsDataSource_1
 
             if (!Directory.Exists(directoryPath))
             {
-                logger.Information("Metrics directory \"{directoryPath}\" does not exist");
+                logger.Information($"Metrics directory \"{directoryPath}\" does not exist");
                 return collection;
             }
 
@@ -30,9 +38,9 @@ namespace MetricsDataSource_1
             return collection;
         }
 
-        public IReadOnlyList<RequestDurationMetric> RequestDurations => _requestDurations;
-        public IReadOnlyList<FirstPageDurationMetric> FirstPageDurations => _firstPageDurations;
-        public IReadOnlyList<AllPagesDurationMetric> AllPagesDurations => _allPagesDurations;
+        public IEnumerable<RequestDurationMetric> RequestDurations => _requestDurations;
+        public IEnumerable<FirstPageDurationMetric> FirstPageDurations => _firstPageDurations;
+        public IEnumerable<AllPagesDurationMetric> AllPagesDurations => _allPagesDurations;
 
         private List<RequestDurationMetric> _requestDurations;
         private List<FirstPageDurationMetric> _firstPageDurations;
@@ -91,6 +99,22 @@ namespace MetricsDataSource_1
                 }
             }
             catch { /* Ignore line */ }
+        }
+    }
+
+    internal sealed class CombinedMetricCollection : IMetricCollection
+    {
+        public IEnumerable<RequestDurationMetric> RequestDurations => _collections.SelectMany(c => c.RequestDurations);
+
+        public IEnumerable<FirstPageDurationMetric> FirstPageDurations => _collections.SelectMany(c => c.FirstPageDurations);
+
+        public IEnumerable<AllPagesDurationMetric> AllPagesDurations => _collections.SelectMany(c => c.AllPagesDurations);
+
+        private readonly IMetricCollection[] _collections;
+
+        public CombinedMetricCollection(params IMetricCollection[] collections)
+        {
+            _collections = collections;
         }
     }
 }

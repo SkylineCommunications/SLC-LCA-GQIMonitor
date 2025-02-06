@@ -1,9 +1,7 @@
 ﻿using Skyline.DataMiner.Analytics.GenericInterface;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
-namespace MetricsDataSource_1
+namespace MetricsDataSource_1.Caches
 {
     internal sealed class MetricsCache
     {
@@ -16,32 +14,27 @@ namespace MetricsDataSource_1
 
         private const string SLHelperMetricsFolderPath = @"C:\Skyline DataMiner\Logging\GQI\Metrics";
         private const string DxMMetricsFolderPath = @"C:\ProgramData\Skyline Communications\DataMiner GQI\Metrics";
-        private const string CustomMetricsFolderPath = @"C:\Skyline DataMiner\Documents\GQI Monitor";
-
-        public static MetricsCache Instance { get; } = new MetricsCache();
+        private const string CustomMetricsFolderPath = @"C:\Skyline DataMiner\Documents\GQI Monitor\Metrics";
 
         private readonly ProviderMetricsCache _slHelperMetrics = new ProviderMetricsCache(SLHelperMetricsFolderPath);
         private readonly ProviderMetricsCache _dxmMetrics = new ProviderMetricsCache(DxMMetricsFolderPath);
         private readonly ProviderMetricsCache _otherMetrics = new ProviderMetricsCache(CustomMetricsFolderPath);
 
-        static MetricsCache() { }
-        private MetricsCache() { }
-
-        public IEnumerable<RequestDurationMetric> GetRequestDurationMetrics(Context context)
+        public IMetricCollection GetMetrics(Context context)
         {
             switch (context.Provider)
             {
                 case GQIProvider_Local_SLHelper:
-                    return _slHelperMetrics.GetMetrics(context).RequestDurations;
+                    return _slHelperMetrics.GetMetrics(context);
                 case GQIProvider_Local_DxM:
-                    return _dxmMetrics.GetMetrics(context).RequestDurations;
+                    return _dxmMetrics.GetMetrics(context);
                 case GQIProvider_Other:
-                    return _otherMetrics.GetMetrics(context).RequestDurations;
+                    return _otherMetrics.GetMetrics(context);
                 case GQIProvider_Local_Any:
                 default:
-                    var slHelperMetrics = _slHelperMetrics.GetMetrics(context).RequestDurations;
-                    var dxmMetrics = _dxmMetrics.GetMetrics(context).RequestDurations;
-                    return slHelperMetrics.Concat(dxmMetrics);
+                    var slHelperMetrics = _slHelperMetrics.GetMetrics(context);
+                    var dxmMetrics = _dxmMetrics.GetMetrics(context);
+                    return new CombinedMetricCollection(slHelperMetrics, dxmMetrics);
             }
         }
 

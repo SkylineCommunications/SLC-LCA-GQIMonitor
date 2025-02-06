@@ -19,9 +19,9 @@ namespace MetricsDataSource_1.Operators
         private const string INTERVAL_3_HOURS = "3 hours";
         private const string INTERVAL_6_HOURS = "6 hours";
         private const string INTERVAL_12_HOURS = "12 hours";
-        private const string INTERVAL_24_HOURS = "25 hours";
+        private const string INTERVAL_24_HOURS = "24 hours";
 
-        private static readonly string[] _intervalOptions = new[]
+        public static readonly string[] IntervalOptions = new[]
         {
             INTERVAL_1_MINUTE,
             INTERVAL_5_MINUTES,
@@ -33,10 +33,16 @@ namespace MetricsDataSource_1.Operators
             INTERVAL_24_HOURS,
         };
 
-        private static readonly GQIArgument<string> _intervalArg = new GQIStringDropdownArgument("Quantization interval", _intervalOptions)
+        private static readonly GQIArgument<string> _defaultIntervalArg = new GQIStringDropdownArgument("Default quantization interval", IntervalOptions)
         {
             IsRequired = true,
             DefaultValue = INTERVAL_5_MINUTES,
+        };
+
+        private static readonly GQIArgument<string> _feedIntervalArg = new GQIStringArgument("Feed quantization interval")
+        {
+            IsRequired = false,
+            DefaultValue = null,
         };
 
         public GQIArgument[] GetInputArguments()
@@ -44,7 +50,8 @@ namespace MetricsDataSource_1.Operators
             return new GQIArgument[]
             {
                 _columnArg,
-                _intervalArg,
+                _defaultIntervalArg,
+                _feedIntervalArg,
             };
         }
 
@@ -55,10 +62,22 @@ namespace MetricsDataSource_1.Operators
         {
             _column = (GQIColumn<DateTime>)args.GetArgumentValue(_columnArg);
 
-            string interval = args.GetArgumentValue(_intervalArg);
+            string interval = GetIntervalValue(args);
             _quantizer = GetQuantizer(interval);
 
             return default;
+        }
+
+        private string GetIntervalValue(OnArgumentsProcessedInputArgs args)
+        {
+            if (!args.HasArgumentValue(_feedIntervalArg))
+                return args.GetArgumentValue(_defaultIntervalArg);
+
+            var interval = args.GetArgumentValue(_feedIntervalArg);
+            if (string.IsNullOrEmpty(interval))
+                return args.GetArgumentValue(_defaultIntervalArg);
+
+            return interval;
         }
 
         public void HandleRow(GQIEditableRow row)
