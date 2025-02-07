@@ -7,7 +7,7 @@ namespace MetricsDataSource_1.DataSources
     using System.Text.RegularExpressions;
 
     [GQIMetaData(Name = "GQI Monitor - Executions")]
-    public sealed class ExecutionsDataSource : IGQIDataSource, IGQIOnInit, IGQIInputArguments
+    public sealed class ExecutionsDataSource : GQIMonitorLoader, IGQIDataSource, IGQIOnInit, IGQIInputArguments
     {
         private IGQILogger _logger;
 

@@ -20,25 +20,23 @@ namespace MetricsDataSource_1
         public TimeSpan Duration { get; set; }
     }
 
-    public sealed class FirstPageDurationMetric : Metric
+    public abstract class QueryDurationMetric : Metric
     {
-        public int Rows { get; set; }
-
         public string Query { get; set; }
 
         [JsonConverter(typeof(MillisecondsToTimespanConverter))]
         public TimeSpan Duration { get; set; }
     }
 
-    public sealed class AllPagesDurationMetric : Metric
+    public sealed class FirstPageDurationMetric : QueryDurationMetric
+    {
+        public int Rows { get; set; }
+    }
+
+    public sealed class AllPagesDurationMetric : QueryDurationMetric
     {
         public int Rows { get; set; }
 
         public int Pages { get; set; }
-
-        public string Query { get; set; }
-
-        [JsonConverter(typeof(MillisecondsToTimespanConverter))]
-        public TimeSpan Duration { get; set; }
     }
 }

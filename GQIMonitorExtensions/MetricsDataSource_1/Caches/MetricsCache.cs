@@ -1,4 +1,5 @@
-﻿using Skyline.DataMiner.Analytics.GenericInterface;
+﻿using GQIMonitor;
+using Skyline.DataMiner.Analytics.GenericInterface;
 using System;
 
 namespace MetricsDataSource_1.Caches
@@ -7,19 +8,18 @@ namespace MetricsDataSource_1.Caches
     {
         public static readonly TimeSpan DefaultMaxCacheAge = TimeSpan.FromSeconds(60);
 
-        private const string SLHelperMetricsFolderPath = @"C:\Skyline DataMiner\Logging\GQI\Metrics";
+        public const string SLHelperMetricsFolderPath = @"C:\Skyline DataMiner\Logging\GQI\Metrics";
         private const string DxMMetricsFolderPath = @"C:\ProgramData\Skyline Communications\DataMiner GQI\Metrics";
-        private const string SnapshotMetricsFolderPath = GQIMonitor.DocumentsPath + @"\Metrics";
 
         private readonly ConfigCache _configCache;
         private readonly ProviderMetricsCache _slHelperMetrics = new ProviderMetricsCache(SLHelperMetricsFolderPath);
         private readonly ProviderMetricsCache _dxmMetrics = new ProviderMetricsCache(DxMMetricsFolderPath);
-        private readonly ProviderMetricsCache _snapshotMetrics = new ProviderMetricsCache(SnapshotMetricsFolderPath);
+        private readonly SnapshotMetricsCache _snapshotMetrics = new SnapshotMetricsCache();
 
         public MetricsCache(ConfigCache configCache)
         {
             _configCache = configCache;
-        } 
+        }
 
         public IMetricCollection GetMetrics(IGQILogger logger)
         {
@@ -31,7 +31,7 @@ namespace MetricsDataSource_1.Caches
                 case Mode.LocalDxM:
                     return _dxmMetrics.GetMetrics(config, logger);
                 case Mode.Snapshot:
-                    return _snapshotMetrics.GetMetrics(config, logger);
+                    return _snapshotMetrics.GetMetrics(config.Snapshot, logger);
                 case Mode.Local:
                 default:
                     var slHelperMetrics = _slHelperMetrics.GetMetrics(config, logger);
@@ -76,6 +76,43 @@ namespace MetricsDataSource_1.Caches
 
                 var minCacheTime = DateTime.UtcNow - maxCacheAge;
                 return _cacheTime > minCacheTime;
+            }
+        }
+
+        private sealed class SnapshotMetricsCache
+        {
+            private string _snapshot;
+            private MetricCollection _metrics = null;
+
+            public MetricCollection GetMetrics(string snapshot, IGQILogger logger)
+            {
+                if (IsValid(snapshot))
+                    return _metrics;
+
+                lock (this)
+                {
+                    if (IsValid(snapshot))
+                        return _metrics;
+
+                    _snapshot = snapshot;
+                    var snapshotPath = GetMetricsPath();
+                    _metrics = MetricCollection.Parse(snapshotPath, logger);
+                }
+
+                return _metrics;
+            }
+
+            private bool IsValid(string snapshot)
+            {
+                if (_metrics is null)
+                    return false;
+
+                return _snapshot == snapshot;
+            }
+
+            private string GetMetricsPath()
+            {
+                return $"{Info.DocumentsPath}/Snapshots/{_snapshot}/Metrics";
             }
         }
     }

@@ -19,7 +19,7 @@ namespace MetricsDataSource_1.DataSources
 
         public GQIColumn[] GetColumns()
         {
-            return ApplicationsFetcher.Columns;
+            return ApplicationsCache.Columns;
         }
 
         public GQIPage GetNextPage(GetNextPageInputArgs args)

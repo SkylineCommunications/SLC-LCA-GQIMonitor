@@ -1,6 +1,6 @@
 ﻿namespace MetricsDataSource_1.Caches
 {
-    internal sealed class Cache
+    internal sealed class Cache : GQIMonitorLoader
     {
         public static Cache Instance { get; } = new Cache();
 
@@ -12,6 +12,8 @@
             Metrics = new MetricsCache(Config);
             Applications = new ApplicationsCache(Config);
             Logs = new LogsCache(Config);
+            Snapshots = new SnapshotsCache();
+            LiveMetrics = new RefCountCache<LiveMetricCollection>(() => new LiveMetricCollection());
         }
 
         public ConfigCache Config { get; }
@@ -21,5 +23,9 @@
         public ApplicationsCache Applications { get; }
 
         public LogsCache Logs { get; }
+
+        public SnapshotsCache Snapshots { get; }
+
+        public RefCountCache<LiveMetricCollection> LiveMetrics { get; }
     }
 }

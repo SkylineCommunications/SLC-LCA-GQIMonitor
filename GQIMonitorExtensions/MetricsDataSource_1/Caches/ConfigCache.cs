@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using GQIMonitor;
+using Newtonsoft.Json;
 using Skyline.DataMiner.Analytics.GenericInterface;
 using System;
 using System.IO;
@@ -7,13 +8,15 @@ namespace MetricsDataSource_1.Caches
 {
     internal sealed class ConfigCache
     {
-        private const string ConfigFilePath = GQIMonitor.DocumentsPath + @"\config.json";
+        private const string ConfigFilePath = Info.DocumentsPath + @"\config.json";
 
         private readonly object _lock = new object();
         private readonly Config DefaultConfig = new Config();
 
         private Config _config = null;
         private FileSystemWatcher _watcher = null;
+
+        public event Action<Config> ConfigChanged;
 
         public Config GetConfig()
         {
@@ -40,7 +43,7 @@ namespace MetricsDataSource_1.Caches
                     return DefaultConfig;
 
                 var jsonConfig = File.ReadAllText(ConfigFilePath);
-                var config = JsonConvert.DeserializeObject<Config>(jsonConfig, GQIMonitor.JsonSerializerSettings);
+                var config = JsonConvert.DeserializeObject<Config>(jsonConfig, Info.JsonSerializerSettings);
                 return config ?? DefaultConfig;
             }
             catch (Exception ex)
@@ -57,6 +60,7 @@ namespace MetricsDataSource_1.Caches
                 {
                     _config = ReadConfig();
                 }
+                ConfigChanged?.Invoke(_config);
             }
             catch
             {
@@ -66,9 +70,12 @@ namespace MetricsDataSource_1.Caches
 
         private FileSystemWatcher WatchConfigChanges()
         {
+            if (!Directory.Exists(ConfigFilePath))
+                return null;
+
             var watcher = new FileSystemWatcher();
 
-            watcher.Path = GQIMonitor.DocumentsPath;
+            watcher.Path = Info.DocumentsPath;
             watcher.Filter = Path.GetFileName(ConfigFilePath);
             watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size | NotifyFilters.CreationTime;
 

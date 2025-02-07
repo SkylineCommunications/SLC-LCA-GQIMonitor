@@ -1,13 +1,8 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MetricsDataSource_1
+namespace GQIMonitor
 {
-    internal static class GQIMonitor
+    public static class Info
     {
         public const string AppName = "GQI Monitor";
         public const string DocumentsPath = @"C:\Skyline DataMiner\Documents\GQI Monitor";

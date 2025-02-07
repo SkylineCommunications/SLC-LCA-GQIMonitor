@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <DMSScript options="272" xmlns="http://www.skyline.be/automation">
-	<Name>MetricsDataSource</Name>
+	<Name>GQIMonitor</Name>
 	<Description></Description>
 	<Type>Automation</Type>
-	<Author>RGE</Author>
+	<Author>SKYLINE2\Ronald</Author>
 	<CheckSets>FALSE</CheckSets>
 	<Folder>GQI Monitor</Folder>
 
@@ -18,10 +18,10 @@
 
 	<Script>
 		<Exe id="1" type="csharp">
-			<Value><![CDATA[[Project:MetricsDataSource_1]]]></Value>
+			<Value><![CDATA[[Project:GQIMonitor_1]]]></Value>
 			<!--<Param type="debug">true</Param>-->
 			<Param type="preCompile">true</Param>
-			<Param type="libraryName">MetricsDataSource</Param>
+			<Param type="libraryName">GQIMonitor</Param>
 			<Message></Message>
 		</Exe>
 	</Script>

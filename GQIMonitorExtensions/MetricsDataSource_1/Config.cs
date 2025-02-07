@@ -8,6 +8,8 @@ namespace MetricsDataSource_1
     {
         public string Mode { get; set; } = MetricsDataSource_1.Mode.Local;
 
+        public string Snapshot { get; set; } = string.Empty;
+
         public string AggregationTimeInterval { get; set; } = MetricsDataSource_1.AggregationTimeInterval.OneHour;
 
         [JsonConverter(typeof(StringToTimespanConverter))]

@@ -100,6 +100,29 @@ namespace MetricsDataSource_1
             }
             catch { /* Ignore line */ }
         }
+
+        public static QueryDurationMetric ParseQueryDurationMetric(string line)
+        {
+            try
+            {
+                var jsonObject = JObject.Parse(line);
+                var metricType = jsonObject["Metric"].Value<string>();
+
+                switch (metricType)
+                {
+                    case "FirstPageDuration":
+                        return jsonObject.ToObject<FirstPageDurationMetric>();
+                    case "AllPagesDuration":
+                        return jsonObject.ToObject<AllPagesDurationMetric>();
+                    default:
+                        return null;
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 
     internal sealed class CombinedMetricCollection : IMetricCollection

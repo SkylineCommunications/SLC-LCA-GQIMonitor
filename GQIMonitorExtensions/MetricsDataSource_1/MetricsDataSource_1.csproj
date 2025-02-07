@@ -23,6 +23,9 @@
 		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
+	  <ProjectReference Include="..\GQIMonitor_1\GQIMonitor_1.csproj" />
+	</ItemGroup>
+	<ItemGroup>
 	  <Reference Include="System.Net.Http" />
 	</ItemGroup>
 	<ProjectExtensions>
