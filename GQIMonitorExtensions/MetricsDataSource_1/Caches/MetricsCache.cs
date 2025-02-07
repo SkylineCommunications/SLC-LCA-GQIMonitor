@@ -5,50 +5,38 @@ namespace MetricsDataSource_1.Caches
 {
     internal sealed class MetricsCache
     {
-        public const string GQIProvider_Local_Any = "Local GQI (Any)";
-        public const string GQIProvider_Local_SLHelper = "Local GQI (SLHelper)";
-        public const string GQIProvider_Local_DxM = "Local GQI (DxM)";
-        public const string GQIProvider_Other = @"From Documents/GQI Monitor";
-
         public static readonly TimeSpan DefaultMaxCacheAge = TimeSpan.FromSeconds(60);
 
         private const string SLHelperMetricsFolderPath = @"C:\Skyline DataMiner\Logging\GQI\Metrics";
         private const string DxMMetricsFolderPath = @"C:\ProgramData\Skyline Communications\DataMiner GQI\Metrics";
-        private const string CustomMetricsFolderPath = @"C:\Skyline DataMiner\Documents\GQI Monitor\Metrics";
+        private const string SnapshotMetricsFolderPath = GQIMonitor.DocumentsPath + @"\Metrics";
 
+        private readonly ConfigCache _configCache;
         private readonly ProviderMetricsCache _slHelperMetrics = new ProviderMetricsCache(SLHelperMetricsFolderPath);
         private readonly ProviderMetricsCache _dxmMetrics = new ProviderMetricsCache(DxMMetricsFolderPath);
-        private readonly ProviderMetricsCache _otherMetrics = new ProviderMetricsCache(CustomMetricsFolderPath);
+        private readonly ProviderMetricsCache _snapshotMetrics = new ProviderMetricsCache(SnapshotMetricsFolderPath);
 
-        public IMetricCollection GetMetrics(Context context)
+        public MetricsCache(ConfigCache configCache)
         {
-            switch (context.Provider)
+            _configCache = configCache;
+        } 
+
+        public IMetricCollection GetMetrics(IGQILogger logger)
+        {
+            var config = _configCache.GetConfig();
+            switch (config.Mode)
             {
-                case GQIProvider_Local_SLHelper:
-                    return _slHelperMetrics.GetMetrics(context);
-                case GQIProvider_Local_DxM:
-                    return _dxmMetrics.GetMetrics(context);
-                case GQIProvider_Other:
-                    return _otherMetrics.GetMetrics(context);
-                case GQIProvider_Local_Any:
+                case Mode.LocalSLHelper:
+                    return _slHelperMetrics.GetMetrics(config, logger);
+                case Mode.LocalDxM:
+                    return _dxmMetrics.GetMetrics(config, logger);
+                case Mode.Snapshot:
+                    return _snapshotMetrics.GetMetrics(config, logger);
+                case Mode.Local:
                 default:
-                    var slHelperMetrics = _slHelperMetrics.GetMetrics(context);
-                    var dxmMetrics = _dxmMetrics.GetMetrics(context);
+                    var slHelperMetrics = _slHelperMetrics.GetMetrics(config, logger);
+                    var dxmMetrics = _dxmMetrics.GetMetrics(config, logger);
                     return new CombinedMetricCollection(slHelperMetrics, dxmMetrics);
-            }
-        }
-
-        public sealed class Context
-        {
-            public IGQILogger Logger { get; set; }
-            public string Provider { get; set; }
-            public TimeSpan MaxCacheAge { get; set; }
-
-            public Context(IGQILogger logger)
-            {
-                Logger = logger;
-                Provider = GQIProvider_Local_Any;
-                MaxCacheAge = DefaultMaxCacheAge;
             }
         }
 
@@ -64,18 +52,18 @@ namespace MetricsDataSource_1.Caches
                 _folderPath = folderPath;
             }
 
-            public MetricCollection GetMetrics(Context context)
+            public MetricCollection GetMetrics(Config config, IGQILogger logger)
             {
-                if (IsValid(context.MaxCacheAge))
+                if (IsValid(config.MetricsCacheTTL))
                     return _metrics;
 
                 lock (this)
                 {
-                    if (IsValid(context.MaxCacheAge))
+                    if (IsValid(config.MetricsCacheTTL))
                         return _metrics;
 
                     _cacheTime = DateTime.UtcNow;
-                    _metrics = MetricCollection.Parse(_folderPath, context.Logger);
+                    _metrics = MetricCollection.Parse(_folderPath, logger);
                 }
 
                 return _metrics;

@@ -104,17 +104,30 @@ namespace MetricsDataSource_1
 
     internal sealed class CombinedMetricCollection : IMetricCollection
     {
-        public IEnumerable<RequestDurationMetric> RequestDurations => _collections.SelectMany(c => c.RequestDurations);
+        public IEnumerable<RequestDurationMetric> RequestDurations => _requestDurations;
 
-        public IEnumerable<FirstPageDurationMetric> FirstPageDurations => _collections.SelectMany(c => c.FirstPageDurations);
+        public IEnumerable<FirstPageDurationMetric> FirstPageDurations => _firstPageDurations;
 
-        public IEnumerable<AllPagesDurationMetric> AllPagesDurations => _collections.SelectMany(c => c.AllPagesDurations);
+        public IEnumerable<AllPagesDurationMetric> AllPagesDurations => _allPagesDurations;
 
-        private readonly IMetricCollection[] _collections;
+        private readonly RequestDurationMetric[] _requestDurations;
+        private readonly FirstPageDurationMetric[] _firstPageDurations;
+        private readonly AllPagesDurationMetric[] _allPagesDurations;
 
         public CombinedMetricCollection(params IMetricCollection[] collections)
         {
-            _collections = collections;
+            _requestDurations = collections
+                .SelectMany(c => c.RequestDurations)
+                .OrderBy(m => m.Time)
+                .ToArray();
+            _firstPageDurations = collections
+                .SelectMany(c => c.FirstPageDurations)
+                .OrderBy(m => m.Time)
+                .ToArray();
+            _allPagesDurations = collections
+                .SelectMany(c => c.AllPagesDurations)
+                .OrderBy(m => m.Time)
+                .ToArray();
         }
     }
 }

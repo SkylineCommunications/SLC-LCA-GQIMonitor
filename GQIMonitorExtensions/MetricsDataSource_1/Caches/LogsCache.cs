@@ -3,41 +3,42 @@ using System;
 
 namespace MetricsDataSource_1.Caches
 {
-    internal sealed class ApplicationsCache
+    internal sealed class LogsCache
     {
+        private const string LogFolderPath = @"C:\Skyline DataMiner\Logging\GQI";
+
         private readonly ConfigCache _configCache;
-        private readonly ApplicationsFetcher _fetcher = new ApplicationsFetcher();
         private readonly object _lock = new object();
 
-        private GQIRow[] _applications = null;
+        private LogCollection _logs = null;
         private DateTime _cacheTime = DateTime.MinValue;
 
-        public ApplicationsCache(ConfigCache configCache)
+        public LogsCache(ConfigCache configCache)
         {
             _configCache = configCache;
         }
 
-        public GQIRow[] GetApplications(GQIDMS dms, IGQILogger logger)
+        public LogCollection GetLogs(IGQILogger logger)
         {
             var config = _configCache.GetConfig();
-            if (IsValid(config.ApplicationsCacheTTL))
-                return _applications;
+            if (IsValid(config.LogsCacheTTL))
+                return _logs;
 
             lock (_lock)
             {
-                if (IsValid(config.ApplicationsCacheTTL))
-                    return _applications;
+                if (IsValid(config.LogsCacheTTL))
+                    return _logs;
 
                 _cacheTime = DateTime.UtcNow;
-                _applications = _fetcher.GetApplicationRows(config, dms, logger);
+                _logs = LogCollection.Parse(LogFolderPath, logger);
             }
 
-            return _applications;
+            return _logs;
         }
 
         private bool IsValid(TimeSpan maxCacheAge)
         {
-            if (_applications is null)
+            if (_logs is null)
                 return false;
 
             var minCacheTime = DateTime.UtcNow - maxCacheAge;

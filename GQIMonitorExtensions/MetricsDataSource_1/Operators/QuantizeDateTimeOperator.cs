@@ -12,31 +12,22 @@ namespace MetricsDataSource_1.Operators
             Types = new[] { GQIColumnType.DateTime },
         };
 
-        private const string INTERVAL_1_MINUTE = "1 minute";
-        private const string INTERVAL_5_MINUTES = "5 minutes";
-        private const string INTERVAL_15_MINUTES = "15 minutes";
-        private const string INTERVAL_1_HOUR = "1 hour";
-        private const string INTERVAL_3_HOURS = "3 hours";
-        private const string INTERVAL_6_HOURS = "6 hours";
-        private const string INTERVAL_12_HOURS = "12 hours";
-        private const string INTERVAL_24_HOURS = "24 hours";
-
         public static readonly string[] IntervalOptions = new[]
         {
-            INTERVAL_1_MINUTE,
-            INTERVAL_5_MINUTES,
-            INTERVAL_15_MINUTES,
-            INTERVAL_1_HOUR,
-            INTERVAL_3_HOURS,
-            INTERVAL_6_HOURS,
-            INTERVAL_12_HOURS,
-            INTERVAL_24_HOURS,
-        };
+            AggregationTimeInterval.OneMinute,
+            AggregationTimeInterval.FiveMinutes ,
+            AggregationTimeInterval.FifteenMinutes ,
+            AggregationTimeInterval.OneHour,
+            AggregationTimeInterval.ThreeHours,
+            AggregationTimeInterval.SixHours,
+            AggregationTimeInterval.TwelveHours,
+            AggregationTimeInterval.TwentyFourHours,
+    };
 
         private static readonly GQIArgument<string> _defaultIntervalArg = new GQIStringDropdownArgument("Default quantization interval", IntervalOptions)
         {
             IsRequired = true,
-            DefaultValue = INTERVAL_5_MINUTES,
+            DefaultValue = AggregationTimeInterval.OneHour,
         };
 
         private static readonly GQIArgument<string> _feedIntervalArg = new GQIStringArgument("Feed quantization interval")
@@ -96,21 +87,21 @@ namespace MetricsDataSource_1.Operators
         {
             switch (interval)
             {
-                case INTERVAL_1_MINUTE:
+                case AggregationTimeInterval.OneMinute:
                     return t => new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute, 0, DateTimeKind.Utc);
-                case INTERVAL_5_MINUTES:
+                case AggregationTimeInterval.FiveMinutes:
                     return t => new DateTime(t.Year, t.Month, t.Day, t.Hour, (t.Minute / 5) * 5, 0, DateTimeKind.Utc);
-                case INTERVAL_15_MINUTES:
+                case AggregationTimeInterval.FifteenMinutes:
                     return t => new DateTime(t.Year, t.Month, t.Day, t.Hour, (t.Minute / 15) * 15, 0, DateTimeKind.Utc);
-                case INTERVAL_1_HOUR:
+                case AggregationTimeInterval.OneHour:
                     return t => new DateTime(t.Year, t.Month, t.Day, t.Hour, 0, 0, DateTimeKind.Utc);
-                case INTERVAL_3_HOURS:
+                case AggregationTimeInterval.ThreeHours:
                     return t => new DateTime(t.Year, t.Month, t.Day, (t.Hour / 3) * 3, 0, 0, DateTimeKind.Utc);
-                case INTERVAL_6_HOURS:
+                case AggregationTimeInterval.SixHours:
                     return t => new DateTime(t.Year, t.Month, t.Day, (t.Hour / 6) * 6, 0, 0, DateTimeKind.Utc);
-                case INTERVAL_12_HOURS:
+                case AggregationTimeInterval.TwelveHours:
                     return t => new DateTime(t.Year, t.Month, t.Day, (t.Hour / 12) * 12, 0, 0, DateTimeKind.Utc);
-                case INTERVAL_24_HOURS:
+                case AggregationTimeInterval.TwentyFourHours:
                     return t => new DateTime(t.Year, t.Month, t.Day, 0, 0, 0, DateTimeKind.Utc);
                 default:
                     throw new GenIfException($"Invalid quantization interval: {interval}");

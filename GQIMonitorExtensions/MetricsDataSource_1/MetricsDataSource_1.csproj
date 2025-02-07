@@ -22,6 +22,9 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="System.Net.Http" />
+	</ItemGroup>
 	<ProjectExtensions>
 		<VisualStudio>
 			<UserProperties DisLinkedXmlFile="..\MetricsDataSource.xml" DisProjectType="automationScriptProject" DisLinkId="1" />
