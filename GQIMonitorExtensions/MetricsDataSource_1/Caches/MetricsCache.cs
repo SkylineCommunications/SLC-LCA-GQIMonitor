@@ -104,7 +104,7 @@ namespace MetricsDataSource_1.Caches
 
             private string GetMetricsPath()
             {
-                return $"{Info.DocumentsPath}/Snapshots/{_snapshot}/Metrics";
+                return $"{Info.DocumentsPath}/Snapshots/{_snapshot}/SLHelper/Metrics";
             }
         }
     }

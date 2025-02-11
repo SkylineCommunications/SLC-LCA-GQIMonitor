@@ -47,9 +47,13 @@ namespace MetricsDataSource_1.Caches
                 if (!File.Exists(ConfigFilePath))
                     return _defaultConfig;
 
-                var jsonConfig = File.ReadAllText(ConfigFilePath);
-                var config = JsonConvert.DeserializeObject<Config>(jsonConfig, Info.JsonSerializerSettings);
-                return config ?? _defaultConfig;
+                using (var stream = new FileStream(ConfigFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var reader = new StreamReader(stream))
+                {
+                    var jsonConfig = reader.ReadToEnd();
+                    var config = JsonConvert.DeserializeObject<Config>(jsonConfig, Info.JsonSerializerSettings);
+                    return config ?? _defaultConfig;
+                }
             }
             catch (Exception ex)
             {
@@ -75,7 +79,7 @@ namespace MetricsDataSource_1.Caches
 
         private FileSystemWatcher WatchConfigChanges()
         {
-            if (!Directory.Exists(ConfigFilePath))
+            if (!Directory.Exists(Info.DocumentsPath))
                 return null;
 
             var watcher = new FileSystemWatcher();
