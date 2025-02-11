@@ -1,22 +1,35 @@
-﻿using Skyline.DataMiner.Automation;
-using System;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 
-namespace CreateSnapshot_1
+namespace GQIMonitor
 {
-    internal interface IGQIProvider
+    public interface IGQIProvider
     {
+        string LogPath { get; }
+        string MetricsPath { get; }
+
         void TakeSnapshot(string snapshotPath);
     }
 
-    internal static class GQIProviders
+    public static class GQIProviders
     {
         public static readonly IGQIProvider SLHelper = new GQISLHelperProvider();
         public static readonly IGQIProvider DxM = new GQIDxMProvider();
 
+        public static IGQIProvider GetCurrent()
+        {
+            var currentProcess = Process.GetCurrentProcess();
+            if (currentProcess.ProcessName == "SLHelper")
+                return SLHelper;
+
+            return DxM;
+        }
+
         private sealed class GQISLHelperProvider : IGQIProvider
         {
-            private const string LogPath = @"C:\Skyline DataMiner\Logging\GQI";
+            public string LogPath => @"C:\Skyline DataMiner\Logging\GQI";
+            public string MetricsPath => @"C:\Skyline DataMiner\Logging\GQI\Metrics";
 
             public void TakeSnapshot(string snapshotPath)
             {
@@ -27,7 +40,8 @@ namespace CreateSnapshot_1
 
         private sealed class GQIDxMProvider : IGQIProvider
         {
-            private const string GQI_DxM_LogPath = @"C:\ProgramData\Skyline Communications\DataMiner GQI";
+            public string LogPath => @"C:\ProgramData\Skyline Communications\DataMiner GQI";
+            public string MetricsPath => @"C:\ProgramData\Skyline Communications\DataMiner GQI\Metrics";
 
             public void TakeSnapshot(string snapshotPath)
             {

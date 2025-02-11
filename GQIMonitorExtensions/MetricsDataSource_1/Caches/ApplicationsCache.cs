@@ -21,6 +21,7 @@ namespace MetricsDataSource_1.Caches
 
         private GQIRow[] _applications = null;
         private DateTime _cacheTime = DateTime.MinValue;
+        private string _mode = string.Empty;
 
         public ApplicationsCache(ConfigCache configCache)
         {
@@ -30,27 +31,31 @@ namespace MetricsDataSource_1.Caches
         public GQIRow[] GetApplications(GQIDMS dms, IGQILogger logger)
         {
             var config = _configCache.GetConfig();
-            if (IsValid(config.ApplicationsCacheTTL))
+            if (IsValid(config))
                 return _applications;
 
             lock (_lock)
             {
-                if (IsValid(config.ApplicationsCacheTTL))
+                if (IsValid(config))
                     return _applications;
 
                 _cacheTime = DateTime.UtcNow;
+                _mode = config.Mode;
                 _applications = GetApplicationRows(config, dms, logger);
             }
 
             return _applications;
         }
 
-        private bool IsValid(TimeSpan maxCacheAge)
+        private bool IsValid(Config config)
         {
             if (_applications is null)
                 return false;
 
-            var minCacheTime = DateTime.UtcNow - maxCacheAge;
+            if (_mode != config.Mode)
+                return false;
+
+            var minCacheTime = DateTime.UtcNow - config.ApplicationsCacheTTL;
             return _cacheTime > minCacheTime;
         }
 
@@ -75,6 +80,7 @@ namespace MetricsDataSource_1.Caches
             {
                 case Mode.Snapshot:
                     return Applications.ReadFromFile(FilePath, logger);
+                case Mode.Live:
                 default:
                     var connection = dms.GetConnection();
                     return _fetcher.GetFromWebAPI(connection);

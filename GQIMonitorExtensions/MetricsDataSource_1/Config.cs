@@ -6,7 +6,7 @@ namespace MetricsDataSource_1
 {
     internal sealed class Config
     {
-        public string Mode { get; set; } = MetricsDataSource_1.Mode.Local;
+        public string Mode { get; set; } = MetricsDataSource_1.Mode.Live;
 
         public string Snapshot { get; set; } = string.Empty;
 
@@ -20,5 +20,10 @@ namespace MetricsDataSource_1
 
         [JsonConverter(typeof(StringToTimespanConverter))]
         public TimeSpan ApplicationsCacheTTL { get; set; } = TimeSpan.FromMinutes(15);
+
+        [JsonConverter(typeof(StringToTimespanConverter))]
+        public TimeSpan LiveMetricRefreshInterval { get; set; } = TimeSpan.FromSeconds(10);
+
+        public int LiveMetricsHistory { get; set; } = 30;
     }
 }

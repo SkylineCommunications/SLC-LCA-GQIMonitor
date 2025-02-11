@@ -4,7 +4,7 @@ namespace MetricsDataSource_1.DataSources
     using Skyline.DataMiner.Analytics.GenericInterface;
 
     [GQIMetaData(Name = "GQI Monitor - Applications")]
-    public sealed class ApplicationsDataSource : IGQIDataSource, IGQIOnInit
+    public sealed class ApplicationsDataSource : GQIMonitorLoader, IGQIDataSource, IGQIOnInit
     {
         private GQIDMS _dms;
         private IGQILogger _logger;

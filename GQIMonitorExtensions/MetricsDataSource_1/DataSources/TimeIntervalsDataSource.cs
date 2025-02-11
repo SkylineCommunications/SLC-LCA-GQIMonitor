@@ -5,7 +5,7 @@ namespace MetricsDataSource_1.DataSources
     using System.Linq;
 
     [GQIMetaData(Name = "GQI Monitor - Time intervals")]
-    public sealed class TimeIntervalsDataSource : IGQIDataSource
+    public sealed class TimeIntervalsDataSource : GQIMonitorLoader, IGQIDataSource
     {
         public GQIColumn[] GetColumns()
         {

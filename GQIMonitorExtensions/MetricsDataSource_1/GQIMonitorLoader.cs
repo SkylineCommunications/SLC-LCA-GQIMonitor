@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.IO;
 using System.Reflection;
 
@@ -25,7 +24,6 @@ namespace MetricsDataSource_1
             var filePath = Path.Combine(LibrariesFolder, fileName);
             try
             {
-                File.AppendAllLines(@"C:\Users\Ronald\Desktop\debug.txt", new[] { $"Loading: {filePath}" });
                 return Assembly.LoadFile(filePath);
             }
             catch

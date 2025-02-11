@@ -5,7 +5,7 @@ using System.Linq;
 namespace MetricsDataSource_1.DataSources
 {
     [GQIMetaData(Name = "GQI Monitor - Logs")]
-    public sealed class LogsDataSource : IGQIDataSource, IGQIOnInit
+    public sealed class LogsDataSource : GQIMonitorLoader, IGQIDataSource, IGQIOnInit
     {
         private IGQILogger _logger;
 

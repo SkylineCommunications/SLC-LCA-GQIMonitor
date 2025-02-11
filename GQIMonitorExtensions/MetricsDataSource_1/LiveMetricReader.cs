@@ -18,15 +18,15 @@ namespace MetricsDataSource_1
         private string _lastFilePath = null;
         private bool _isDisposed = false;
 
-        public LiveMetricReader()
+        public LiveMetricReader(string metricsFolderPath)
         {
-            _directoryWatcher = new FileSystemWatcher(MetricsCache.SLHelperMetricsFolderPath);
+            _directoryWatcher = new FileSystemWatcher(metricsFolderPath);
             _directoryWatcher.Filter = FilePattern;
             _directoryWatcher.NotifyFilter = NotifyFilters.CreationTime;
             _directoryWatcher.Created += OnNewFileCreated;
             _directoryWatcher.EnableRaisingEvents = true;
 
-            _newFilePaths = GetInitialMetricFilePaths();
+            _newFilePaths = GetInitialMetricFilePaths(metricsFolderPath);
         }
 
         public void Dispose()
@@ -38,9 +38,9 @@ namespace MetricsDataSource_1
             _directoryWatcher.Dispose();
         }
 
-        private List<string> GetInitialMetricFilePaths()
+        private List<string> GetInitialMetricFilePaths(string metricsFolderPath)
         {
-            return Directory.GetFiles(MetricsCache.SLHelperMetricsFolderPath, FilePattern)
+            return Directory.GetFiles(metricsFolderPath, FilePattern)
                 .OrderBy(File.GetLastWriteTimeUtc)
                 .ToList();
         }

@@ -4,7 +4,6 @@ namespace MetricsDataSource_1.DataSources
     using Skyline.DataMiner.Analytics.GenericInterface;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text.RegularExpressions;
 
     [GQIMetaData(Name = "GQI Monitor - Executions")]
     public sealed class ExecutionsDataSource : GQIMonitorLoader, IGQIDataSource, IGQIOnInit, IGQIInputArguments
@@ -114,7 +113,7 @@ namespace MetricsDataSource_1.DataSources
                 new GQICell { Value = metric.Time },
                 new GQICell { Value = metric.User },
                 new GQICell { Value = metric.Query },
-                new GQICell { Value = GetAppId(metric.Query) },
+                new GQICell { Value = MetricCollection.GetAppId(metric.Query) },
                 new GQICell { Value = metric.Duration.Milliseconds },
                 new GQICell { Value = metric.Rows },
                 new GQICell { Value = 1 },
@@ -130,24 +129,13 @@ namespace MetricsDataSource_1.DataSources
                 new GQICell { Value = metric.Time },
                 new GQICell { Value = metric.User },
                 new GQICell { Value = metric.Query },
-                new GQICell { Value = GetAppId(metric.Query) },
+                new GQICell { Value = MetricCollection.GetAppId(metric.Query) },
                 new GQICell { Value = metric.Duration.Milliseconds },
                 new GQICell { Value = metric.Rows },
                 new GQICell { Value = metric.Pages },
                 new GQICell { Value = false },
             };
             return new GQIRow(cells);
-        }
-
-        private static readonly Regex _appIdRegex = new Regex(@"^app/(?<appId>[^/]*)", RegexOptions.Compiled);
-
-        private string GetAppId(string queryTag)
-        {
-            var match = _appIdRegex.Match(queryTag);
-            if (!match.Success)
-                return null;
-
-            return match.Groups["appId"].Value;
         }
     }
 }

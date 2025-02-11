@@ -1,4 +1,6 @@
-﻿using Skyline.DataMiner.Analytics.GenericInterface;
+﻿using GQIMonitor;
+using MetricsDataSource_1.Caches;
+using Skyline.DataMiner.Analytics.GenericInterface;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,44 +10,50 @@ namespace MetricsDataSource_1
 {
     internal sealed class LiveMetricCollection : IDisposable
     {
-        private const int BucketCount = 15;
-
         public static readonly GQIColumn[] Columns = new GQIColumn[]
         {
             new GQIDateTimeColumn("Start time"),
             new GQIDateTimeColumn("End time"),
             new GQIIntColumn("Query count"),
-            new GQIDoubleColumn("Average duration"),
-            new GQIDoubleColumn("Maximum duration"),
+            new GQIDoubleColumn("Average duration (ms)"),
+            new GQIDoubleColumn("Maximum duration (ms)"),
         };
 
-        private static readonly TimeSpan RefreshRate = TimeSpan.FromSeconds(10);
-        private static readonly long BucketTickSize = RefreshRate.Ticks;
+        private static readonly TimeSpan MinRefreshInterval = TimeSpan.FromSeconds(1);
 
         public event Action Updated;
-        public event Action<string> RowRemoved;
-        public event Action<GQIRow> RowAdded;
-
-        public GQIRow[] Metrics => _metrics.ToArray();
+        public event Action<string> BucketRemoved;
+        public event Action<Bucket> BucketAdded;
 
         public DateTime StartTime => new DateTime(_startTicks, DateTimeKind.Utc);
         public DateTime EndTime => new DateTime(_endTicks, DateTimeKind.Utc);
-        public DateTime LastUpdated => new DateTime(_lastUpdatedTicks, DateTimeKind.Utc); 
+        public DateTime LastUpdated => new DateTime(_lastUpdatedTicks, DateTimeKind.Utc);
 
-        private readonly Queue<GQIRow> _metrics;
+        private readonly object _lock = new object();
+        private readonly int _bucketCount;
+        private readonly long _bucketTickSize;
+        private readonly Queue<Bucket> _buckets;
         private readonly LiveMetricReader _reader;
         private readonly Timer _timer;
 
-        private List<QueryDurationMetric> _overflowBucket;
+        private Bucket _overflowBucket;
         private long _startTicks;
         private long _endTicks;
         private long _lastUpdatedTicks;
 
-        public LiveMetricCollection()
+        public LiveMetricCollection(IGQIProvider gqiProvider, ConfigCache configCache)
         {
-            _reader = new LiveMetricReader();
-            _timer = new Timer(Update, null, RefreshRate, RefreshRate);
-            _metrics = GetInitialMetrics();
+            var config = configCache.GetConfig();
+            _bucketCount = Math.Max(0, config.LiveMetricsHistory);
+            
+            var refreshInterval = config.LiveMetricRefreshInterval;
+            if (refreshInterval < MinRefreshInterval)
+                refreshInterval = MinRefreshInterval;
+            _bucketTickSize = refreshInterval.Ticks;
+
+            _reader = new LiveMetricReader(gqiProvider.MetricsPath);
+            _timer = new Timer(Update, null, refreshInterval, refreshInterval);
+            _buckets = GetInitialBuckets();
         }
 
         public void Dispose()
@@ -54,15 +62,25 @@ namespace MetricsDataSource_1
             _reader.Dispose();
         }
 
-        private Queue<GQIRow> GetInitialMetrics()
+        public Bucket[] GetBuckets()
         {
-            var buckets = Enumerable.Range(0, BucketCount)
-                .Select(bucketIndex => new List<QueryDurationMetric>())
+            lock (_lock)
+            {
+                return _buckets.ToArray();
+            }
+        }
+
+        private Queue<Bucket> GetInitialBuckets()
+        {
+            var lines = _reader.ReadLines();
+
+            UpdateTimeRange();
+
+            var buckets = Enumerable.Range(0, _bucketCount)
+                .Select(bucketIndex => new Bucket(GetBucketBounds(bucketIndex)))
                 .ToArray();
 
-            var lines = _reader.ReadLines();
-            UpdateTimeRange();
-            _overflowBucket = new List<QueryDurationMetric>();
+            _overflowBucket = new Bucket(GetBucketBounds(_bucketCount));
             foreach (var line in lines)
             {
                 var metric = MetricCollection.ParseQueryDurationMetric(line);
@@ -76,70 +94,37 @@ namespace MetricsDataSource_1
                     continue;
                 }
 
-                if (bucketIndex >= BucketCount)
+                if (bucketIndex >= _bucketCount)
                 {
                     // Too new
-                    _overflowBucket.Add(metric);
+                    _overflowBucket.Metrics.Add(metric);
                     continue;
                 }
 
-                buckets[bucketIndex].Add(metric);
+                buckets[bucketIndex].Metrics.Add(metric);
             }
 
-            return new Queue<GQIRow>(buckets.Select(ToRow));
+            return new Queue<Bucket>(buckets);
         }
 
         private int GetBucketIndex(long metricTicks)
         {
             var ticksFromStart = metricTicks - _startTicks;
-            return (int)(ticksFromStart / BucketTickSize);
+            return (int)(ticksFromStart / _bucketTickSize);
         }
 
-        private (long Start, long End) GetBucketBounds(int bucketIndex)
+        private BucketBounds GetBucketBounds(int bucketIndex)
         {
-            var bucketStartTicks = _startTicks + bucketIndex * BucketTickSize;
-            var bucketEndTicks = bucketStartTicks + BucketTickSize;
-            return (bucketStartTicks, bucketEndTicks);
-        }
-
-        private GQIRow ToRow(List<QueryDurationMetric> metrics, int bucketIndex)
-        {
-            var count = metrics.Count;
-            var bounds = GetBucketBounds(bucketIndex);
-
-            var avgDuration = GetAvgDuration(metrics);
-            var maxDuration = GetMaxDuration(metrics);
-
-            var cells = new GQICell[]
-            {
-                new GQICell { Value = new DateTime(bounds.Start, DateTimeKind.Utc) },
-                new GQICell { Value = new DateTime(bounds.End, DateTimeKind.Utc) },
-                new GQICell { Value = count },
-                new GQICell { Value = avgDuration },
-                new GQICell { Value = maxDuration },
-            };
-            return new GQIRow($"{bounds.Start}", cells);
-        }
-
-        private static double GetAvgDuration(List<QueryDurationMetric> metrics)
-        {
-            if (metrics.Count == 0)
-                return 0;
-            return metrics.Average(metric => metric.Duration.TotalMilliseconds);
-        } 
-
-        private static double GetMaxDuration(List<QueryDurationMetric> metrics)
-        {
-            if (metrics.Count == 0)
-                return 0;
-            return metrics.Max(metric => metric.Duration.TotalMilliseconds);
+            var bucketStartTicks = _startTicks + bucketIndex * _bucketTickSize;
+            var bucketEndTicks = bucketStartTicks + _bucketTickSize;
+            return new BucketBounds(bucketStartTicks, bucketEndTicks);
         }
 
         private void UpdateTimeRange()
         {
             _lastUpdatedTicks = DateTime.UtcNow.Ticks;
-            _endTicks = (_lastUpdatedTicks / BucketTickSize) * BucketTickSize;
-            _startTicks = _endTicks - (BucketCount * BucketTickSize);
+            _endTicks = (_lastUpdatedTicks / _bucketTickSize) * _bucketTickSize;
+            _startTicks = _endTicks - (_bucketCount * _bucketTickSize);
         }
 
         private void Update(object state)
@@ -157,9 +142,10 @@ namespace MetricsDataSource_1
         private void Update()
         {
             var lines = _reader.ReadLines();
+            UpdateTimeRange();
 
             var currentBucket = _overflowBucket;
-            _overflowBucket = new List<QueryDurationMetric>();
+            _overflowBucket = new Bucket(GetBucketBounds(_bucketCount));
             foreach (var line in lines)
             {
                 var metric = MetricCollection.ParseQueryDurationMetric(line);
@@ -167,31 +153,57 @@ namespace MetricsDataSource_1
                     continue;
 
                 var bucketIndex = GetBucketIndex(metric.Time.Ticks);
-                if (bucketIndex < BucketCount)
+                if (bucketIndex < _bucketCount - 1)
                 {
                     // Too old
                     continue;
                 }
 
-                if (bucketIndex > BucketCount)
+                if (bucketIndex >= _bucketCount)
                 {
                     // Too new
-                    _overflowBucket.Add(metric);
+                    _overflowBucket.Metrics.Add(metric);
                     continue;
                 }
 
-                currentBucket.Add(metric);
+                currentBucket.Metrics.Add(metric);
             }
 
-            var rowToRemove = _metrics.Dequeue();
-            var rowToAdd = ToRow(currentBucket, BucketCount);
-            _metrics.Enqueue(rowToAdd);
+            Bucket bucketToRemove = null;
+            lock (_lock)
+            {
+                bucketToRemove = _buckets.Dequeue();
+                _buckets.Enqueue(currentBucket);
+            }
 
-            UpdateTimeRange();
-
-            RowRemoved?.Invoke(rowToRemove.Key);
-            RowAdded?.Invoke(rowToAdd);
+            BucketRemoved?.Invoke(bucketToRemove.Key);
+            BucketAdded?.Invoke(currentBucket);
             Updated?.Invoke();
+        }
+
+        public sealed class Bucket
+        {
+            public string Key => $"{Bounds.Start.Ticks}";
+            public BucketBounds Bounds { get; }
+            public List<QueryDurationMetric> Metrics { get; }
+
+            public Bucket(BucketBounds bounds)
+            {
+                Bounds = bounds;
+                Metrics = new List<QueryDurationMetric>();
+            }
+        }
+
+        public readonly struct BucketBounds
+        {
+            public DateTime Start { get; }
+            public DateTime End { get; }
+
+            public BucketBounds(long start, long end)
+            {
+                Start = new DateTime(start, DateTimeKind.Utc);
+                End = new DateTime(end, DateTimeKind.Utc);
+            }
         }
     }
 }

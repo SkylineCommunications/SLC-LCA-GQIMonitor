@@ -1,20 +1,36 @@
-﻿namespace MetricsDataSource_1.Caches
-{
-    internal sealed class Cache : GQIMonitorLoader
-    {
-        public static Cache Instance { get; } = new Cache();
+﻿using GQIMonitor;
+using System;
 
-        static Cache() { }
+namespace MetricsDataSource_1.Caches
+{
+    internal sealed class Cache
+    {
+        public static Cache Instance { get; }
+
+        static Cache()
+        {
+            try
+            {
+                Instance = new Cache();
+            }
+            catch (Exception ex)
+            {
+                Debug.Log($"Failed initializing cache: {ex.Message}");
+            }
+        }
 
         private Cache()
         {
+            GQIProvider = GQIProviders.GetCurrent();
             Config = new ConfigCache();
-            Metrics = new MetricsCache(Config);
+            Metrics = new MetricsCache(GQIProvider, Config);
             Applications = new ApplicationsCache(Config);
             Logs = new LogsCache(Config);
             Snapshots = new SnapshotsCache();
-            LiveMetrics = new RefCountCache<LiveMetricCollection>(() => new LiveMetricCollection());
+            LiveMetrics = new RefCountCache<LiveMetricCollection>(() => new LiveMetricCollection(GQIProvider, Config));
         }
+
+        public IGQIProvider GQIProvider { get; }
 
         public ConfigCache Config { get; }
 

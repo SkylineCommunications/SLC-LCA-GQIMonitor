@@ -35,22 +35,48 @@ namespace MetricsDataSource_1
                 collection.AddMetricFile(filePath, logger);
             }
 
+            collection.CalculateBounds();
             return collection;
         }
 
+        public DateTime CreatedAt => _createdAt;
+        public DateTime StartTime => _bounds.Start;
+        public DateTime EndTime => _bounds.End;
         public IEnumerable<RequestDurationMetric> RequestDurations => _requestDurations;
         public IEnumerable<FirstPageDurationMetric> FirstPageDurations => _firstPageDurations;
         public IEnumerable<AllPagesDurationMetric> AllPagesDurations => _allPagesDurations;
 
-        private List<RequestDurationMetric> _requestDurations;
-        private List<FirstPageDurationMetric> _firstPageDurations;
-        private List<AllPagesDurationMetric> _allPagesDurations;
+        private readonly DateTime _createdAt;
+        private readonly List<RequestDurationMetric> _requestDurations;
+        private readonly List<FirstPageDurationMetric> _firstPageDurations;
+        private readonly List<AllPagesDurationMetric> _allPagesDurations;
+        private Bounds _bounds;
 
         private MetricCollection()
         {
+            _createdAt = DateTime.UtcNow;
             _requestDurations = new List<RequestDurationMetric>();
             _firstPageDurations = new List<FirstPageDurationMetric>();
             _allPagesDurations = new List<AllPagesDurationMetric>();
+        }
+
+        private void CalculateBounds()
+        {
+            _bounds = new Bounds(_createdAt, _createdAt);
+            _bounds = Bounds.GetOuterBounds(_bounds, GetBounds(_requestDurations));
+            _bounds = Bounds.GetOuterBounds(_bounds, GetBounds(_firstPageDurations));
+            _bounds = Bounds.GetOuterBounds(_bounds, GetBounds(_allPagesDurations));
+        }
+
+        private Bounds GetBounds(IReadOnlyList<Metric> metrics)
+        {
+            if (metrics.Count == 0)
+                return default;
+
+            var firstMetric = metrics[0];
+            var lastMetric = metrics[metrics.Count - 1];
+
+            return new Bounds(firstMetric.Time, lastMetric.Time);
         }
 
         private void AddMetricFile(string filePath, IGQILogger logger)
@@ -121,6 +147,36 @@ namespace MetricsDataSource_1
             catch
             {
                 return null;
+            }
+        }
+
+        public static string GetAppId(string queryTag)
+        {
+            if (queryTag.Length < 40)
+                return null;
+
+            if (!queryTag.StartsWith("app/"))
+                return null;
+
+            return queryTag.Substring(4, 36);
+        }
+
+        public readonly struct Bounds
+        {
+            public DateTime Start { get; }
+            public DateTime End { get; }
+
+            public Bounds(DateTime start, DateTime end)
+            {
+                Start = start;
+                End = end;
+            }
+
+            public static Bounds GetOuterBounds(Bounds a, Bounds b)
+            {
+                var start = a.Start <= b.Start ? a.Start : b.Start;
+                var end = a.End >= b.End ? a.End : b.End;
+                return new Bounds(start, end);
             }
         }
     }

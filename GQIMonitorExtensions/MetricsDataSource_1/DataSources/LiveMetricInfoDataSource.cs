@@ -2,9 +2,10 @@ namespace MetricsDataSource_1.DataSources
 {
     using MetricsDataSource_1.Caches;
     using Skyline.DataMiner.Analytics.GenericInterface;
+    using System.Reflection;
 
     [GQIMetaData(Name = "GQI Monitor - Live metric info")]
-    public sealed class LiveMetricInfoDataSource : IGQIDataSource, IGQIOnInit, IGQIUpdateable, IGQIOnPrepareFetch, IGQIOnDestroy
+    public sealed class LiveMetricInfoDataSource : GQIMonitorLoader, IGQIDataSource, IGQIOnInit, IGQIUpdateable, IGQIOnPrepareFetch, IGQIOnDestroy
     {
         private IGQILogger _logger;
 

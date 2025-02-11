@@ -5,7 +5,7 @@ namespace MetricsDataSource_1.DataSources
     using System.Linq;
 
     [GQIMetaData(Name = "GQI Monitor - Request durations")]
-    public sealed class MetricsDataSource : IGQIDataSource, IGQIOnInit
+    public sealed class MetricsDataSource : GQIMonitorLoader, IGQIDataSource, IGQIOnInit
     {
         private IGQILogger _logger;
 

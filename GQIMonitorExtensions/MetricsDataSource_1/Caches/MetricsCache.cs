@@ -8,35 +8,27 @@ namespace MetricsDataSource_1.Caches
     {
         public static readonly TimeSpan DefaultMaxCacheAge = TimeSpan.FromSeconds(60);
 
-        public const string SLHelperMetricsFolderPath = @"C:\Skyline DataMiner\Logging\GQI\Metrics";
-        private const string DxMMetricsFolderPath = @"C:\ProgramData\Skyline Communications\DataMiner GQI\Metrics";
-
         private readonly ConfigCache _configCache;
-        private readonly ProviderMetricsCache _slHelperMetrics = new ProviderMetricsCache(SLHelperMetricsFolderPath);
-        private readonly ProviderMetricsCache _dxmMetrics = new ProviderMetricsCache(DxMMetricsFolderPath);
-        private readonly SnapshotMetricsCache _snapshotMetrics = new SnapshotMetricsCache();
+        private readonly ProviderMetricsCache _liveMetrics;
+        private readonly SnapshotMetricsCache _snapshotMetrics;
 
-        public MetricsCache(ConfigCache configCache)
+        public MetricsCache(IGQIProvider gqiProvider, ConfigCache configCache)
         {
             _configCache = configCache;
+            _liveMetrics = new ProviderMetricsCache(gqiProvider.MetricsPath);
+            _snapshotMetrics = new SnapshotMetricsCache();
         }
 
-        public IMetricCollection GetMetrics(IGQILogger logger)
+        public MetricCollection GetMetrics(IGQILogger logger)
         {
             var config = _configCache.GetConfig();
             switch (config.Mode)
             {
-                case Mode.LocalSLHelper:
-                    return _slHelperMetrics.GetMetrics(config, logger);
-                case Mode.LocalDxM:
-                    return _dxmMetrics.GetMetrics(config, logger);
                 case Mode.Snapshot:
                     return _snapshotMetrics.GetMetrics(config.Snapshot, logger);
-                case Mode.Local:
+                case Mode.Live:
                 default:
-                    var slHelperMetrics = _slHelperMetrics.GetMetrics(config, logger);
-                    var dxmMetrics = _dxmMetrics.GetMetrics(config, logger);
-                    return new CombinedMetricCollection(slHelperMetrics, dxmMetrics);
+                    return _liveMetrics.GetMetrics(config, logger);
             }
         }
 

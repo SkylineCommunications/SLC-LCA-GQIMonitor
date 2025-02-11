@@ -5,7 +5,7 @@ namespace MetricsDataSource_1.DataSources
     using System.Linq;
 
     [GQIMetaData(Name = "GQI Monitor - Snapshots")]
-    public sealed class SnapshotsDataSource : IGQIDataSource, IGQIUpdateable
+    public sealed class SnapshotsDataSource : GQIMonitorLoader, IGQIDataSource, IGQIUpdateable
     {
         public GQIColumn[] GetColumns()
         {

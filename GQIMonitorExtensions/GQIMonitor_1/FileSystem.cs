@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace CreateSnapshot_1
+namespace GQIMonitor
 {
     internal static class FileSystem
     {

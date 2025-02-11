@@ -6,17 +6,22 @@ using System.IO;
 
 namespace MetricsDataSource_1.Caches
 {
-    internal sealed class ConfigCache
+    internal sealed class ConfigCache : IDisposable
     {
         private const string ConfigFilePath = Info.DocumentsPath + @"\config.json";
 
         private readonly object _lock = new object();
-        private readonly Config DefaultConfig = new Config();
+        private readonly Config _defaultConfig = new Config();
 
         private Config _config = null;
         private FileSystemWatcher _watcher = null;
 
         public event Action<Config> ConfigChanged;
+
+        public void Dispose()
+        {
+            _watcher?.Dispose();
+        }
 
         public Config GetConfig()
         {
@@ -40,11 +45,11 @@ namespace MetricsDataSource_1.Caches
             try
             {
                 if (!File.Exists(ConfigFilePath))
-                    return DefaultConfig;
+                    return _defaultConfig;
 
                 var jsonConfig = File.ReadAllText(ConfigFilePath);
                 var config = JsonConvert.DeserializeObject<Config>(jsonConfig, Info.JsonSerializerSettings);
-                return config ?? DefaultConfig;
+                return config ?? _defaultConfig;
             }
             catch (Exception ex)
             {
@@ -93,7 +98,7 @@ namespace MetricsDataSource_1.Caches
 
         private void OnCreated(object sender, FileSystemEventArgs e) => UpdateConfig();
 
-        private void OnDeleted(object sender, FileSystemEventArgs e)=> UpdateConfig();
+        private void OnDeleted(object sender, FileSystemEventArgs e) => UpdateConfig();
 
         private void OnRenamed(object sender, RenamedEventArgs e) => UpdateConfig();
     }
