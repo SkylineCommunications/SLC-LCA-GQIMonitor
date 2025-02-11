@@ -15,8 +15,8 @@ namespace MetricsDataSource_1
             new GQIDateTimeColumn("Start time"),
             new GQIDateTimeColumn("End time"),
             new GQIIntColumn("Query count"),
-            new GQIDoubleColumn("Average duration (ms)"),
-            new GQIDoubleColumn("Maximum duration (ms)"),
+            new GQIIntColumn("Average duration (ms)"),
+            new GQIIntColumn("Maximum duration (ms)"),
         };
 
         private static readonly TimeSpan MinRefreshInterval = TimeSpan.FromSeconds(1);

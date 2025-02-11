@@ -1,19 +1,15 @@
 ﻿using Skyline.DataMiner.Analytics.GenericInterface;
+using System;
 using System.Linq;
 
 namespace MetricsDataSource_1.Operators
 {
-    [GQIMetaData(Name = "GQI Monitor - Format double columns")]
-    public sealed class FormatDoubleOperator : IGQIRowOperator, IGQIInputArguments
+    [GQIMetaData(Name = "GQI Monitor - Round double columns")]
+    public sealed class RoundDoubleOperator : IGQIRowOperator, IGQIInputArguments
     {
         private static readonly GQIArgument<GQIColumn[]> _columnsArg = new GQIColumnListArgument("Columns")
         {
             Types = new[] { GQIColumnType.Double },
-            IsRequired = true,
-        };
-
-        private static readonly GQIArgument<string> _formatArg = new GQIStringArgument("Format")
-        {
             IsRequired = true,
         };
 
@@ -22,12 +18,10 @@ namespace MetricsDataSource_1.Operators
             return new GQIArgument[]
             {
                 _columnsArg,
-                _formatArg,
             };
         }
 
         private GQIColumn<double>[] _columns;
-        private string _format;
 
         public OnArgumentsProcessedOutputArgs OnArgumentsProcessed(OnArgumentsProcessedInputArgs args)
         {
@@ -35,8 +29,6 @@ namespace MetricsDataSource_1.Operators
             _columns = columns
                 .Cast<GQIColumn<double>>()
                 .ToArray();
-
-            _format = args.GetArgumentValue(_formatArg);
 
             return default;
         }
@@ -48,8 +40,8 @@ namespace MetricsDataSource_1.Operators
                 if (!row.TryGetValue(column, out double value))
                     continue;
 
-                var formatted = value.ToString(_format);
-                row.SetDisplayValue(column, formatted);
+                var rounded = Math.Round(value);
+                row.SetValue(column, rounded);
             }
         }
     }

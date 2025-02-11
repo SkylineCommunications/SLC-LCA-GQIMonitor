@@ -2,6 +2,7 @@ namespace MetricsDataSource_1.DataSources
 {
     using MetricsDataSource_1.Caches;
     using Skyline.DataMiner.Analytics.GenericInterface;
+    using System;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -88,8 +89,8 @@ namespace MetricsDataSource_1.DataSources
             var metrics = FilterMetrics(bucket.Metrics);
 
             var count = metrics.Count;
-            var avgDuration = GetAvgDuration(metrics);
-            var maxDuration = GetMaxDuration(metrics);
+            var avgDuration = (int)Math.Round(GetAvgDuration(metrics));
+            var maxDuration = (int)Math.Round(GetMaxDuration(metrics));
 
             var cells = new GQICell[]
             {
