@@ -26,17 +26,16 @@ namespace GQI
 
         [JsonConverter(typeof(MillisecondsToTimespanConverter))]
         public TimeSpan Duration { get; set; }
+
+        public int Rows { get; set; }
     }
 
     public sealed class FirstPageDurationMetric : QueryDurationMetric
     {
-        public int Rows { get; set; }
     }
 
     public sealed class AllPagesDurationMetric : QueryDurationMetric
     {
-        public int Rows { get; set; }
-
         public int Pages { get; set; }
     }
 }

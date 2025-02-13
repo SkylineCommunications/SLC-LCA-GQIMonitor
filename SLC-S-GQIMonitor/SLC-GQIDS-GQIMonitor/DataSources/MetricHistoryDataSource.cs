@@ -6,8 +6,8 @@ namespace GQI.DataSources
     using System.Collections.Generic;
     using System.Linq;
 
-    [GQIMetaData(Name = "GQI Monitor - Live metrics")]
-    public sealed class LiveMetricsDataSource : GQIMonitorLoader, IGQIDataSource, IGQIOnInit, IGQIInputArguments, IGQIUpdateable, IGQIOnPrepareFetch, IGQIOnDestroy
+    [GQIMetaData(Name = "GQI Monitor - Metric history")]
+    public sealed class MetricHistoryDataSource : GQIMonitorLoader, IGQIDataSource, IGQIOnInit, IGQIInputArguments
     {
         private IGQILogger _logger;
 
@@ -65,26 +65,11 @@ namespace GQI.DataSources
             return Columns;
         }
 
-        private RefCountCache<LiveMetricCollection>.Handle _handle;
-
-        public OnPrepareFetchOutputArgs OnPrepareFetch(OnPrepareFetchInputArgs args)
-        {
-            _handle = Cache.Instance.LiveMetrics.GetHandle();
-            return default;
-        }
-
-        private IGQIUpdater _updater;
-
-        public void OnStartUpdates(IGQIUpdater updater)
-        {
-            _updater = updater;
-            _handle.Value.BucketRemoved += OnBucketRemoved;
-            _handle.Value.BucketAdded += OnBucketAdded;
-        }
-
         public GQIPage GetNextPage(GetNextPageInputArgs args)
         {
-            var rows = _handle.Value.GetBuckets()
+            var metrics = Cache.Instance.Metrics.GetMetrics(_logger);
+            var buckets = CreateBuckets(metrics);
+            var rows = buckets
                 .Select(ToRow)
                 .ToArray();
 
@@ -92,6 +77,51 @@ namespace GQI.DataSources
             {
                 HasNextPage = false,
             };
+        }
+
+        private static readonly TimeSpan BucketInterval = TimeSpan.FromHours(1);
+
+        private Bucket[] CreateBuckets(MetricCollection metrics)
+        {
+            var bucketSize = BucketInterval.Ticks;
+            var bucketOffset = (metrics.StartTime.Ticks / bucketSize) * bucketSize;
+            var bucketCount = GetBucketIndex(bucketOffset, bucketSize, metrics.EndTime.Ticks) + 1;
+
+            var buckets = Enumerable.Range(0, bucketCount)
+                .Select(bucketIndex => new Bucket(GetBucketBounds(bucketOffset, bucketSize, bucketIndex)))
+                .ToArray();
+
+            // Adjust bounds of the first and last bucket
+            var firstBucket = buckets.First();
+            var lastBucket = buckets.Last();
+            firstBucket.Bounds = firstBucket.Bounds.StartAt(metrics.StartTime);
+            lastBucket.Bounds = lastBucket.Bounds.EndAt(metrics.EndTime);
+
+            foreach (var metric in metrics.QueryDurations)
+            {
+                var bucketIndex = GetBucketIndex(bucketOffset, bucketSize, metric.Time.Ticks);
+                if (bucketIndex < 0 || bucketIndex >= bucketCount)
+                {
+                    _logger.Warning($"Unexpected bucket index: {bucketIndex}");
+                    continue;
+                }
+
+                buckets[bucketIndex].Metrics.Add(metric);
+            }
+
+            return buckets;
+        }
+
+        private int GetBucketIndex(long bucketOffset, long bucketSize, long value)
+        {
+            return (int)((value - bucketOffset) / bucketSize);
+        }
+
+        private BucketBounds GetBucketBounds(long bucketOffset, long bucketSize, int bucketIndex)
+        {
+            var start = bucketOffset + (bucketIndex * bucketSize);
+            var end = start + bucketSize;
+            return new BucketBounds(start, end);
         }
 
         private GQIRow ToRow(Bucket bucket)
@@ -158,40 +188,6 @@ namespace GQI.DataSources
                 users.Add(metric.User);
             }
             return users.Count;
-        }
-
-        private void OnBucketRemoved(string bucketKey)
-        {
-            var updater = _updater;
-            if (updater is null)
-                return;
-
-            updater.RemoveRow(bucketKey);
-        }
-
-        private void OnBucketAdded(Bucket bucket)
-        {
-            var updater = _updater;
-            if (updater is null)
-                return;
-
-            var row = ToRow(bucket);
-            updater.AddRow(row);
-        }
-
-        public void OnStopUpdates()
-        {
-            _handle.Value.BucketAdded -= OnBucketAdded;
-            _handle.Value.BucketRemoved -= OnBucketRemoved;
-            _updater = null;
-        }
-
-        public OnDestroyOutputArgs OnDestroy(OnDestroyInputArgs args)
-        {
-            _handle?.Dispose();
-            _handle = null;
-
-            return default;
         }
     }
 }

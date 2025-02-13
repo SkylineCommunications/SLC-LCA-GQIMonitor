@@ -89,51 +89,31 @@ namespace GQI.DataSources
             };
         }
 
-        private IEnumerable<GQIRow> GetRows(IMetricCollection metrics)
+        private IEnumerable<GQIRow> GetRows(MetricCollection metrics)
         {
-            switch (_optimizationType)
+            return metrics.QueryDurations.Select(ToRow);
+        }
+
+        private GQIRow ToRow(QueryDurationMetric metric)
+        {
+            var pageCount = 1;
+            var isFirstPageOnly = true;
+            if (metric is AllPagesDurationMetric allPagesMetric)
             {
-                case OptimizationType_FirstPage:
-                    return metrics.FirstPageDurations.Select(ToRow);
-                case OptimizationType_AllPages:
-                    return metrics.AllPagesDurations.Select(ToRow);
-                default:
-                    var firstPageRows = metrics.FirstPageDurations.Select(ToRow);
-                    var allPagesRows = metrics.AllPagesDurations.Select(ToRow);
-                    return firstPageRows
-                        .Concat(allPagesRows)
-                        .OrderBy(row => row.Cells[0].Value);
+                pageCount = allPagesMetric.Pages;
+                isFirstPageOnly = false;
             }
-        }
 
-        private GQIRow ToRow(FirstPageDurationMetric metric)
-        {
             var cells = new[]
             {
                 new GQICell { Value = metric.Time },
                 new GQICell { Value = metric.User },
                 new GQICell { Value = metric.Query },
                 new GQICell { Value = MetricCollection.GetAppId(metric.Query) },
-                new GQICell { Value = metric.Duration.Milliseconds },
+                new GQICell { Value = metric.Duration.TotalMilliseconds },
                 new GQICell { Value = metric.Rows },
-                new GQICell { Value = 1 },
-                new GQICell { Value = true },
-            };
-            return new GQIRow(cells);
-        }
-
-        private GQIRow ToRow(AllPagesDurationMetric metric)
-        {
-            var cells = new[]
-            {
-                new GQICell { Value = metric.Time },
-                new GQICell { Value = metric.User },
-                new GQICell { Value = metric.Query },
-                new GQICell { Value = MetricCollection.GetAppId(metric.Query) },
-                new GQICell { Value = metric.Duration.Milliseconds },
-                new GQICell { Value = metric.Rows },
-                new GQICell { Value = metric.Pages },
-                new GQICell { Value = false },
+                new GQICell { Value = pageCount },
+                new GQICell { Value = isFirstPageOnly },
             };
             return new GQIRow(cells);
         }

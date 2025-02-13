@@ -3,18 +3,10 @@ using Skyline.DataMiner.Analytics.GenericInterface;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace GQI
 {
-    internal interface IMetricCollection
-    {
-        IEnumerable<RequestDurationMetric> RequestDurations { get; }
-        IEnumerable<FirstPageDurationMetric> FirstPageDurations { get; }
-        IEnumerable<AllPagesDurationMetric> AllPagesDurations { get; }
-    }
-
-    internal sealed class MetricCollection : IMetricCollection
+    internal sealed class MetricCollection
     {
         public static MetricCollection Parse(string directoryPath, IGQILogger logger)
         {
@@ -43,29 +35,25 @@ namespace GQI
         public DateTime StartTime => _bounds.Start;
         public DateTime EndTime => _bounds.End;
         public IEnumerable<RequestDurationMetric> RequestDurations => _requestDurations;
-        public IEnumerable<FirstPageDurationMetric> FirstPageDurations => _firstPageDurations;
-        public IEnumerable<AllPagesDurationMetric> AllPagesDurations => _allPagesDurations;
+        public IEnumerable<QueryDurationMetric> QueryDurations => _queryDurations;
 
         private readonly DateTime _createdAt;
         private readonly List<RequestDurationMetric> _requestDurations;
-        private readonly List<FirstPageDurationMetric> _firstPageDurations;
-        private readonly List<AllPagesDurationMetric> _allPagesDurations;
+        private readonly List<QueryDurationMetric> _queryDurations;
         private Bounds _bounds;
 
         private MetricCollection()
         {
             _createdAt = DateTime.UtcNow;
             _requestDurations = new List<RequestDurationMetric>();
-            _firstPageDurations = new List<FirstPageDurationMetric>();
-            _allPagesDurations = new List<AllPagesDurationMetric>();
+            _queryDurations = new List<QueryDurationMetric>();
         }
 
         private void CalculateBounds()
         {
             _bounds = new Bounds(_createdAt, _createdAt);
             _bounds = Bounds.GetOuterBounds(_bounds, GetBounds(_requestDurations));
-            _bounds = Bounds.GetOuterBounds(_bounds, GetBounds(_firstPageDurations));
-            _bounds = Bounds.GetOuterBounds(_bounds, GetBounds(_allPagesDurations));
+            _bounds = Bounds.GetOuterBounds(_bounds, GetBounds(_queryDurations));
         }
 
         private Bounds GetBounds(IReadOnlyList<Metric> metrics)
@@ -117,10 +105,10 @@ namespace GQI
                         _requestDurations.Add(jsonObject.ToObject<RequestDurationMetric>());
                         break;
                     case "FirstPageDuration":
-                        _firstPageDurations.Add(jsonObject.ToObject<FirstPageDurationMetric>());
+                        _queryDurations.Add(jsonObject.ToObject<FirstPageDurationMetric>());
                         break;
                     case "AllPagesDuration":
-                        _allPagesDurations.Add(jsonObject.ToObject<AllPagesDurationMetric>());
+                        _queryDurations.Add(jsonObject.ToObject<AllPagesDurationMetric>());
                         break;
                 }
             }
@@ -178,35 +166,6 @@ namespace GQI
                 var end = a.End >= b.End ? a.End : b.End;
                 return new Bounds(start, end);
             }
-        }
-    }
-
-    internal sealed class CombinedMetricCollection : IMetricCollection
-    {
-        public IEnumerable<RequestDurationMetric> RequestDurations => _requestDurations;
-
-        public IEnumerable<FirstPageDurationMetric> FirstPageDurations => _firstPageDurations;
-
-        public IEnumerable<AllPagesDurationMetric> AllPagesDurations => _allPagesDurations;
-
-        private readonly RequestDurationMetric[] _requestDurations;
-        private readonly FirstPageDurationMetric[] _firstPageDurations;
-        private readonly AllPagesDurationMetric[] _allPagesDurations;
-
-        public CombinedMetricCollection(params IMetricCollection[] collections)
-        {
-            _requestDurations = collections
-                .SelectMany(c => c.RequestDurations)
-                .OrderBy(m => m.Time)
-                .ToArray();
-            _firstPageDurations = collections
-                .SelectMany(c => c.FirstPageDurations)
-                .OrderBy(m => m.Time)
-                .ToArray();
-            _allPagesDurations = collections
-                .SelectMany(c => c.AllPagesDurations)
-                .OrderBy(m => m.Time)
-                .ToArray();
         }
     }
 }
