@@ -1,14 +1,13 @@
 ﻿using GQIMonitor;
 using Skyline.DataMiner.Analytics.GenericInterface;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace GQI.Caches
 {
     internal sealed class ApplicationsCache
     {
-        private const string FilePath = Info.DocumentsPath + @"\applications.json";
-
         public static readonly GQIColumn[] Columns = new GQIColumn[]
         {
             new GQIStringColumn("ID"),
@@ -19,7 +18,7 @@ namespace GQI.Caches
         private readonly ApplicationsFetcher _fetcher = new ApplicationsFetcher();
         private readonly object _lock = new object();
 
-        private GQIRow[] _applications = null;
+        private Dictionary<string, Application> _applications = null;
         private DateTime _cacheTime = DateTime.MinValue;
         private string _mode = string.Empty;
 
@@ -28,7 +27,7 @@ namespace GQI.Caches
             _configCache = configCache;
         }
 
-        public GQIRow[] GetApplications(GQIDMS dms, IGQILogger logger)
+        public Dictionary<string, Application> GetApplications(GQIDMS dms, IGQILogger logger)
         {
             var config = _configCache.GetConfig();
             if (IsValid(config))
@@ -41,7 +40,7 @@ namespace GQI.Caches
 
                 _cacheTime = DateTime.UtcNow;
                 _mode = config.Mode;
-                _applications = GetApplicationRows(config, dms, logger);
+                _applications = GetApplications(config, dms, logger);
             }
 
             return _applications;
@@ -59,14 +58,15 @@ namespace GQI.Caches
             return _cacheTime > minCacheTime;
         }
 
-        private GQIRow[] GetApplicationRows(Config config, GQIDMS dms, IGQILogger logger)
+        private Dictionary<string, Application> GetApplications(Config config, GQIDMS dms, IGQILogger logger)
         {
             logger.Information("Retrieving applications...");
             try
             {
 
-                var applications = GetApplications(config, dms, logger);
-                return GetRows(applications);
+                var collection = GetApplicationCollection(config, dms, logger);
+                var applications = collection?.Applications.ToDictionary(app => app.ID);
+                return applications ?? new Dictionary<string, Application>();
             }
             catch (Exception ex)
             {
@@ -74,12 +74,13 @@ namespace GQI.Caches
             }
         }
 
-        private ApplicationCollection GetApplications(Config config, GQIDMS dms, IGQILogger logger)
+        private ApplicationCollection GetApplicationCollection(Config config, GQIDMS dms, IGQILogger logger)
         {
             switch (config.Mode)
             {
                 case Mode.Snapshot:
-                    return Applications.ReadFromFile(FilePath, logger);
+                    var filePath = GetApplicationsPath(config.Snapshot);
+                    return Applications.ReadFromFile(filePath, logger);
                 case Mode.Live:
                 default:
                     var connection = dms.GetConnection();
@@ -87,26 +88,9 @@ namespace GQI.Caches
             }
         }
 
-        private static GQIRow[] GetRows(ApplicationCollection collection)
+        private static string GetApplicationsPath(string snapshot)
         {
-            var applications = collection?.Applications;
-            if (applications is null)
-                return Array.Empty<GQIRow>();
-
-            return applications
-                .Select(ToRow)
-                .ToArray();
-        }
-
-        private static GQIRow ToRow(Application application)
-        {
-            var cells = new[]
-            {
-                new GQICell { Value = application.ID },
-                new GQICell { Value = application.Name },
-            };
-
-            return new GQIRow(application.ID, cells);
+            return $"{Info.DocumentsPath}/Snapshots/{snapshot}/applications.json";
         }
     }
 }

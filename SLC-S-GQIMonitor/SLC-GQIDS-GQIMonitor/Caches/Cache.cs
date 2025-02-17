@@ -24,6 +24,7 @@ namespace GQI.Caches
             GQIProvider = GQIProviders.GetCurrent();
             Config = new ConfigCache();
             Metrics = new MetricsCache(GQIProvider, Config);
+            MetricsAnalysis = new MetricsAnalysisCache(Metrics);
             Applications = new ApplicationsCache(Config);
             Logs = new LogsCache(Config);
             Snapshots = new SnapshotsCache();
@@ -43,5 +44,7 @@ namespace GQI.Caches
         public SnapshotsCache Snapshots { get; }
 
         public RefCountCache<LiveMetricCollection> LiveMetrics { get; }
+
+        public MetricsAnalysisCache MetricsAnalysis { get; }
     }
 }

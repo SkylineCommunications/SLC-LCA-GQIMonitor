@@ -158,7 +158,7 @@ namespace GQI.DataSources
                 filteredMetrics = filteredMetrics.Where(metric => metric.User == _user);
 
             if (filterOnApp)
-                filteredMetrics = filteredMetrics.Where(metric => MetricCollection.GetAppId(metric.Query) == _appId);
+                filteredMetrics = filteredMetrics.Where(metric => metric.App == _appId);
 
             return filteredMetrics.ToArray();
         }

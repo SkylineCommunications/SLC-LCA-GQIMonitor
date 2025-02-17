@@ -1,7 +1,9 @@
 namespace GQI.DataSources
 {
     using GQI.Caches;
+    using GQIMonitor;
     using Skyline.DataMiner.Analytics.GenericInterface;
+    using System.Linq;
 
     [GQIMetaData(Name = "GQI Monitor - Applications")]
     public sealed class ApplicationsDataSource : GQIMonitorLoader, IGQIDataSource, IGQIOnInit
@@ -24,12 +26,27 @@ namespace GQI.DataSources
 
         public GQIPage GetNextPage(GetNextPageInputArgs args)
         {
-            var rows = Cache.Instance.Applications.GetApplications(_dms, _logger);
+            var rows = Cache.Instance.Applications
+                .GetApplications(_dms, _logger)
+                .Values
+                .Select(ToRow)
+                .ToArray();
 
             return new GQIPage(rows)
             {
                 HasNextPage = false,
             };
+        }
+
+        private static GQIRow ToRow(Application application)
+        {
+            var cells = new[]
+            {
+                new GQICell { Value = application.ID },
+                new GQICell { Value = application.Name },
+            };
+
+            return new GQIRow(application.ID, cells);
         }
     }
 }

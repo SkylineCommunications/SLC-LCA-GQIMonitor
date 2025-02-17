@@ -34,8 +34,8 @@ namespace GQI
         public DateTime CreatedAt => _createdAt;
         public DateTime StartTime => _bounds.Start;
         public DateTime EndTime => _bounds.End;
-        public IEnumerable<RequestDurationMetric> RequestDurations => _requestDurations;
-        public IEnumerable<QueryDurationMetric> QueryDurations => _queryDurations;
+        public IReadOnlyList<RequestDurationMetric> RequestDurations => _requestDurations;
+        public IReadOnlyList<QueryDurationMetric> QueryDurations => _queryDurations;
 
         private readonly DateTime _createdAt;
         private readonly List<RequestDurationMetric> _requestDurations;
@@ -136,17 +136,6 @@ namespace GQI
             {
                 return null;
             }
-        }
-
-        public static string GetAppId(string queryTag)
-        {
-            if (queryTag.Length < 40)
-                return null;
-
-            if (!queryTag.StartsWith("app/"))
-                return null;
-
-            return queryTag.Substring(4, 36);
         }
 
         public readonly struct Bounds

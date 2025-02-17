@@ -22,12 +22,33 @@ namespace GQI
 
     public abstract class QueryDurationMetric : Metric
     {
-        public string Query { get; set; }
+        public string Query
+        {
+            set
+            {
+                _app = GetAppId(value);
+            }
+        }
 
         [JsonConverter(typeof(MillisecondsToTimespanConverter))]
         public TimeSpan Duration { get; set; }
 
         public int Rows { get; set; }
+
+        public string App => _app;
+
+        private string _app;
+
+        private static string GetAppId(string queryTag)
+        {
+            if (queryTag.Length < 40)
+                return null;
+
+            if (!queryTag.StartsWith("app/"))
+                return null;
+
+            return queryTag.Substring(4, 36);
+        }
     }
 
     public sealed class FirstPageDurationMetric : QueryDurationMetric
