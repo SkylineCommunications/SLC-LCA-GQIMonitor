@@ -51,7 +51,13 @@ namespace GQI
 
         private void CalculateBounds()
         {
-            _bounds = new Bounds(_createdAt, _createdAt);
+            if (_requestDurations.Count == 0 && _queryDurations.Count == 0)
+            {
+                _bounds = new Bounds(_createdAt, _createdAt);
+                return;
+            }    
+
+            _bounds = new Bounds(DateTime.MaxValue, DateTime.MinValue);
             _bounds = Bounds.GetOuterBounds(_bounds, GetBounds(_requestDurations));
             _bounds = Bounds.GetOuterBounds(_bounds, GetBounds(_queryDurations));
         }

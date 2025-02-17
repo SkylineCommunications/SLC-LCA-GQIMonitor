@@ -26,7 +26,7 @@ type: System Health
 # If the ID is filled in but does not exist yet, a new Catalog item will be registered with this ID.
 # If the ID is filled in but does exist, properties of the item will be overwritten.
 #   Must be a valid GUID.
-id: ab335882-9242-4abb-a660-0bef955b933b
+id: faded63d-795f-422b-968a-89ae98ce0a2d
 # [Required]
 # The human-friendly name of the Catalog item.
 # Can be changed at any time.

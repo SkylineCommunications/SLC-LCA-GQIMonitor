@@ -18,7 +18,7 @@ namespace GQI.DataSources
             return default;
         }
 
-        private static readonly GQIArgument<string> _appIdArg = new GQIStringArgument("App ID")
+        private static readonly GQIArgument<string> _appIdArg = new GQIStringArgument("App IDs")
         {
             IsRequired = false,
             DefaultValue = string.Empty,
@@ -39,12 +39,16 @@ namespace GQI.DataSources
             };
         }
 
-        private string _appId = string.Empty;
+        private string[] _appIds = Array.Empty<string>();
         private string _user = string.Empty;
 
         public OnArgumentsProcessedOutputArgs OnArgumentsProcessed(OnArgumentsProcessedInputArgs args)
         {
-            args.TryGetArgumentValue(_appIdArg, out _appId);
+            if (args.TryGetArgumentValue(_appIdArg, out var appIds) && !string.IsNullOrEmpty(appIds))
+            {
+                _appIds = appIds.Split(',');
+            }
+
             args.TryGetArgumentValue(_userArg, out _user);
 
             return default;
@@ -147,7 +151,7 @@ namespace GQI.DataSources
         
         private ICollection<QueryDurationMetric> FilterMetrics(List<QueryDurationMetric> metrics)
         {
-            bool filterOnApp = !string.IsNullOrEmpty(_appId);
+            bool filterOnApp = _appIds.Length != 0;
             bool filterOnUser = !string.IsNullOrEmpty(_user);
 
             if (!filterOnApp && !filterOnUser)
@@ -158,7 +162,10 @@ namespace GQI.DataSources
                 filteredMetrics = filteredMetrics.Where(metric => metric.User == _user);
 
             if (filterOnApp)
-                filteredMetrics = filteredMetrics.Where(metric => metric.App == _appId);
+            {
+                var appIds = new HashSet<string>(_appIds);
+                filteredMetrics = filteredMetrics.Where(metric => appIds.Contains(metric.App));
+            }
 
             return filteredMetrics.ToArray();
         }

@@ -8,8 +8,8 @@
 		<GenerateDataMinerPackage>True</GenerateDataMinerPackage>
 		<Version>1.0.0</Version>
 		<VersionComment>Initial Version</VersionComment>
-		<!-- Do NOT fill in the Organization Token here. This points to either an Environment Variable skyline__sdk__catalogpublishtoken holding the organization token or a Visual Studio User Secret holding the token. -->
-		<CatalogPublishKeyName>skyline:sdk:catalogpublishtoken</CatalogPublishKeyName>
+		<!-- Do NOT fill in the Organization Token here. This points to either an Environment Variable holding the organization token or a Visual Studio User Secret holding the token. -->
+		<CatalogPublishKeyName>skyline:sdk:catalogpublishtoken:skyline</CatalogPublishKeyName>
 		<CatalogDefaultDownloadKeyName>skyline:sdk:catalogdownloadtoken</CatalogDefaultDownloadKeyName>
 		<UserSecretsId>7676f6b8-d66c-4a55-8ffe-f854bfe7f928</UserSecretsId>
 	</PropertyGroup>
