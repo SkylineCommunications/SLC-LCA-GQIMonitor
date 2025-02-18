@@ -18,13 +18,13 @@ namespace GQI.DataSources
             return default;
         }
 
-        private static readonly GQIArgument<string> _appIdArg = new GQIStringArgument("App IDs")
+        private static readonly GQIArgument<string> _appIdsArg = new GQIStringArgument("App IDs")
         {
             IsRequired = false,
             DefaultValue = string.Empty,
         };
 
-        private static readonly GQIArgument<string> _userArg = new GQIStringArgument("User")
+        private static readonly GQIArgument<string> _usersArg = new GQIStringArgument("Users")
         {
             IsRequired = false,
             DefaultValue = string.Empty,
@@ -34,22 +34,25 @@ namespace GQI.DataSources
         {
             return new GQIArgument[]
             {
-                _appIdArg,
-                _userArg,
+                _appIdsArg,
+                _usersArg,
             };
         }
 
         private string[] _appIds = Array.Empty<string>();
-        private string _user = string.Empty;
+        private string[] _users = Array.Empty<string>();
 
         public OnArgumentsProcessedOutputArgs OnArgumentsProcessed(OnArgumentsProcessedInputArgs args)
         {
-            if (args.TryGetArgumentValue(_appIdArg, out var appIds) && !string.IsNullOrEmpty(appIds))
+            if (args.TryGetArgumentValue(_appIdsArg, out var appIds) && !string.IsNullOrEmpty(appIds))
             {
                 _appIds = appIds.Split(',');
             }
 
-            args.TryGetArgumentValue(_userArg, out _user);
+            if (args.TryGetArgumentValue(_usersArg, out var users) && !string.IsNullOrEmpty(users))
+            {
+                _users = users.Split(',');
+            }
 
             return default;
         }
@@ -152,14 +155,17 @@ namespace GQI.DataSources
         private ICollection<QueryDurationMetric> FilterMetrics(List<QueryDurationMetric> metrics)
         {
             bool filterOnApp = _appIds.Length != 0;
-            bool filterOnUser = !string.IsNullOrEmpty(_user);
+            bool filterOnUser = _users.Length != 0;
 
             if (!filterOnApp && !filterOnUser)
                 return metrics;
 
             IEnumerable<QueryDurationMetric> filteredMetrics = metrics;
             if (filterOnUser)
-                filteredMetrics = filteredMetrics.Where(metric => metric.User == _user);
+            {
+                var users = new HashSet<string>(_users);
+                filteredMetrics = filteredMetrics.Where(metric => users.Contains(metric.User));
+            }
 
             if (filterOnApp)
             {

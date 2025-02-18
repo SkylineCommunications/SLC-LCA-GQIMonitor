@@ -175,7 +175,7 @@ namespace GQI.DataSources
         private GQIRow ToRow(KeyValuePair<string, MetricsAnalysisCache.Result> result)
         {
             var appName = "<Other>";
-            if (_apps.TryGetValue(result.Key, out var app))
+            if (result.Key != null && _apps.TryGetValue(result.Key, out var app))
                 appName = app.Name;
 
             var cells = new[]

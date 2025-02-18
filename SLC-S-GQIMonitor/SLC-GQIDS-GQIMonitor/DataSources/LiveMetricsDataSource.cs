@@ -18,13 +18,13 @@ namespace GQI.DataSources
             return default;
         }
 
-        private static readonly GQIArgument<string> _appIdArg = new GQIStringArgument("App ID")
+        private static readonly GQIArgument<string> _appIdsArg = new GQIStringArgument("App IDs")
         {
             IsRequired = false,
             DefaultValue = string.Empty,
         };
 
-        private static readonly GQIArgument<string> _userArg = new GQIStringArgument("User")
+        private static readonly GQIArgument<string> _usersArg = new GQIStringArgument("Users")
         {
             IsRequired = false,
             DefaultValue = string.Empty,
@@ -34,18 +34,25 @@ namespace GQI.DataSources
         {
             return new GQIArgument[]
             {
-                _appIdArg,
-                _userArg,
+                _appIdsArg,
+                _usersArg,
             };
         }
 
-        private string _appId = string.Empty;
-        private string _user = string.Empty;
+        private HashSet<string> _appIds = null;
+        private HashSet<string> _users = null;
 
         public OnArgumentsProcessedOutputArgs OnArgumentsProcessed(OnArgumentsProcessedInputArgs args)
         {
-            args.TryGetArgumentValue(_appIdArg, out _appId);
-            args.TryGetArgumentValue(_userArg, out _user);
+            if (args.TryGetArgumentValue(_appIdsArg, out var appIds) && !string.IsNullOrEmpty(appIds))
+            {
+                _appIds = new HashSet<string>(appIds.Split(','));
+            }
+
+            if (args.TryGetArgumentValue(_usersArg, out var users) && !string.IsNullOrEmpty(users))
+            {
+                _users = new HashSet<string>(users.Split(','));
+            }
 
             return default;
         }
@@ -117,18 +124,18 @@ namespace GQI.DataSources
         
         private ICollection<QueryDurationMetric> FilterMetrics(List<QueryDurationMetric> metrics)
         {
-            bool filterOnApp = !string.IsNullOrEmpty(_appId);
-            bool filterOnUser = !string.IsNullOrEmpty(_user);
+            bool filterOnApp = _appIds?.Count > 0;
+            bool filterOnUser = _users?.Count > 0;
 
             if (!filterOnApp && !filterOnUser)
                 return metrics;
 
             IEnumerable<QueryDurationMetric> filteredMetrics = metrics;
             if (filterOnUser)
-                filteredMetrics = filteredMetrics.Where(metric => metric.User == _user);
+                filteredMetrics = filteredMetrics.Where(metric => _users.Contains(metric.User));
 
             if (filterOnApp)
-                filteredMetrics = filteredMetrics.Where(metric => metric.App == _appId);
+                filteredMetrics = filteredMetrics.Where(metric => _appIds.Contains(metric.App));
 
             return filteredMetrics.ToArray();
         }

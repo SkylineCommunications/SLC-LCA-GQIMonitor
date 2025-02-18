@@ -91,7 +91,7 @@ namespace GQI.Caches
 
             foreach (var metric in metrics)
             {
-                var key = keySelector(metric);
+                var key = keySelector(metric) ?? string.Empty;
                 if (!analysis.TryGetValue(key, out var result))
                 {
                     analysis[key] = new Result(metric);

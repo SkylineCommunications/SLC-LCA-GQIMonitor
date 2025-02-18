@@ -63,10 +63,23 @@ namespace GQI.Caches
             logger.Information("Retrieving applications...");
             try
             {
-
                 var collection = GetApplicationCollection(config, dms, logger);
-                var applications = collection?.Applications.ToDictionary(app => app.ID);
-                return applications ?? new Dictionary<string, Application>();
+                var dictionary = new Dictionary<string, Application>();
+                var applications = collection?.Applications;
+                if (applications is null)
+                    return dictionary;
+
+                foreach (var application in applications)
+                {
+                    if (application is null) 
+                        continue;
+                    if (application.ID is null)
+                        continue;
+
+                    dictionary[application.ID] = application;
+                }
+
+                return dictionary;
             }
             catch (Exception ex)
             {
