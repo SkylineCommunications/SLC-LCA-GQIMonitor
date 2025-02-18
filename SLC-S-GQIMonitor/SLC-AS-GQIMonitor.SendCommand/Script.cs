@@ -2,6 +2,7 @@ using Skyline.DataMiner.Automation;
 using System;
 using System.IO;
 using System.IO.Pipes;
+using System.Text;
 
 namespace SLCASGQIMonitorSendCommand
 {
@@ -11,6 +12,7 @@ namespace SLCASGQIMonitorSendCommand
     public class Script
     {
         private const int ConnectTimeoutMs = 5000;
+        private const int BufferSize = 64;
 
         /// <summary>
         /// The script entry point.
@@ -58,17 +60,26 @@ namespace SLCASGQIMonitorSendCommand
 
         private void SendCommand(IEngine engine, string command)
         {
+            engine.ShowProgress("Creating client...");
             using (var client = CreateClient(engine))
             {
-                engine.Log("Client created");
-
+                engine.ShowProgress("Connecting client...");
                 ConnectClient(engine, client);
-                engine.Log("Client connected");
 
-                using (var writer = new StreamWriter(client))
+                engine.ShowProgress($"Writing command...");
+                using (var writer = new StreamWriter(client, Encoding.UTF8, BufferSize, leaveOpen: true))
                 {
                     WriteCommand(engine, writer, command);
-                    engine.Log("Command written");
+                }
+
+                engine.ShowProgress("Reading response...");
+                using (var reader = new StreamReader(client, Encoding.UTF8, true, BufferSize, leaveOpen: true))
+                {
+                    var response = ReadResponse(engine, reader);
+                    if (response != "OK")
+                    {
+                        engine.ExitFail($"Failed executing command: {response}");
+                    }
                 }
             }
         }
@@ -77,7 +88,7 @@ namespace SLCASGQIMonitorSendCommand
         {
             try
             {
-                return new NamedPipeClientStream(".", GQIMonitor.Info.AppName, PipeDirection.Out);
+                return new NamedPipeClientStream(".", GQIMonitor.Info.AppName, PipeDirection.InOut);
             }
             catch (Exception ex)
             {
@@ -105,11 +116,26 @@ namespace SLCASGQIMonitorSendCommand
             try
             {
                 writer.WriteLine(command);
+                writer.Flush();
             }
             catch (Exception ex)
             {
                 engine.Log($"Failed to write command: {ex}");
                 engine.ExitFail(ex.Message);
+            }
+        }
+
+        private string ReadResponse(IEngine engine, StreamReader reader)
+        {
+            try
+            {
+                return reader.ReadLine();
+            }
+            catch (Exception ex)
+            {
+                engine.Log($"Failed to read response: {ex}");
+                engine.ExitFail(ex.Message);
+                return null;
             }
         }
     }
