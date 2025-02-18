@@ -6,8 +6,8 @@
 	<PropertyGroup>
 		<DataMinerType>Package</DataMinerType>
 		<GenerateDataMinerPackage>True</GenerateDataMinerPackage>
-		<Version>1.0.1</Version>
-		<VersionComment>Multi-select metric filters</VersionComment>
+		<Version>1.0.2</Version>
+		<VersionComment>Reload metrics history</VersionComment>
 		<!-- Do NOT fill in the Organization Token here. This points to either an Environment Variable holding the organization token or a Visual Studio User Secret holding the token. -->
 		<CatalogPublishKeyName>skyline:sdk:catalogpublishtoken:skyline</CatalogPublishKeyName>
 		<CatalogDefaultDownloadKeyName>skyline:sdk:catalogdownloadtoken</CatalogDefaultDownloadKeyName>
