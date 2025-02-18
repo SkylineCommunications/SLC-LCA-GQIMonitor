@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SLC-S-GQIMonitor", "SLC-S-GQIMonitor\SLC-S-GQIMonitor.csproj", "{C20C8C6E-2053-43C2-BF77-6CA0EDE1D2FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SLC-S-GQIMonitor", "SLC-S-GQIMonitor\SLC-S-GQIMonitor.csproj", "{C20C8C6E-2053-43C2-BF77-6CA0EDE1D2FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SLC-AS-GQIMonitor", "SLC-AS-GQIMonitor\SLC-AS-GQIMonitor.csproj", "{3D42252D-A4B1-4967-8E7A-82C0B2A50762}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SLC-AS-GQIMonitor", "SLC-AS-GQIMonitor\SLC-AS-GQIMonitor.csproj", "{3D42252D-A4B1-4967-8E7A-82C0B2A50762}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SLC-GQIDS-GQIMonitor", "SLC-GQIDS-GQIMonitor\SLC-GQIDS-GQIMonitor.csproj", "{BFEE88DE-7AFD-47E4-8942-7998DE1DB1D3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SLC-GQIDS-GQIMonitor", "SLC-GQIDS-GQIMonitor\SLC-GQIDS-GQIMonitor.csproj", "{BFEE88DE-7AFD-47E4-8942-7998DE1DB1D3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SLC-AS-GQIMonitor.CreateSnapshot", "SLC-AS-GQIMonitor.CreateSnapshot\SLC-AS-GQIMonitor.CreateSnapshot.csproj", "{8C5305A6-26F7-4465-8740-74287185249F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SLC-AS-GQIMonitor.CreateSnapshot", "SLC-AS-GQIMonitor.CreateSnapshot\SLC-AS-GQIMonitor.CreateSnapshot.csproj", "{8C5305A6-26F7-4465-8740-74287185249F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SLC-AS-GQIMonitor.SendCommand", "SLC-AS-GQIMonitor.SendCommand\SLC-AS-GQIMonitor.SendCommand.csproj", "{4FFB7483-BEDC-4C9E-92AB-CC049E97F38F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{8C5305A6-26F7-4465-8740-74287185249F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8C5305A6-26F7-4465-8740-74287185249F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8C5305A6-26F7-4465-8740-74287185249F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4FFB7483-BEDC-4C9E-92AB-CC049E97F38F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FFB7483-BEDC-4C9E-92AB-CC049E97F38F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FFB7483-BEDC-4C9E-92AB-CC049E97F38F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FFB7483-BEDC-4C9E-92AB-CC049E97F38F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

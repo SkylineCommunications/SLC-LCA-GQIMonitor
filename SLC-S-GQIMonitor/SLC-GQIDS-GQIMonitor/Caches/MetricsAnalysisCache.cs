@@ -34,6 +34,15 @@ namespace GQI.Caches
             }
         }
 
+        public void Clear()
+        {
+            lock (_lock)
+            {
+                _analysis = null;
+                _options = null;
+            }
+        }
+
         private bool IsCacheValid(Options filter)
         {
             return _analysis != null && IsSameOptions(_options, filter);

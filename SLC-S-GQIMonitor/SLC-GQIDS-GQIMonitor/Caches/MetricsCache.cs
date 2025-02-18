@@ -32,6 +32,12 @@ namespace GQI.Caches
             }
         }
 
+        public void Clear()
+        {
+            _snapshotMetrics.Clear();
+            _liveMetrics.Clear();
+        }
+
         private sealed class ProviderMetricsCache
         {
             private readonly string _folderPath;
@@ -59,6 +65,14 @@ namespace GQI.Caches
                 }
 
                 return _metrics;
+            }
+
+            public void Clear()
+            {
+                lock (this)
+                {
+                    _metrics = null;
+                }
             }
 
             private bool IsValid(TimeSpan maxCacheAge)
@@ -92,6 +106,14 @@ namespace GQI.Caches
                 }
 
                 return _metrics;
+            }
+
+            public void Clear()
+            {
+                lock (this)
+                {
+                    _metrics = null;
+                }
             }
 
             private bool IsValid(string snapshot)
