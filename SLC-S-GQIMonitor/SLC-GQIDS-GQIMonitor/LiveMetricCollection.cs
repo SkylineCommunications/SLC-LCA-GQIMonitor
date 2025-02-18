@@ -18,32 +18,36 @@ namespace GQI
         public DateTime StartTime => new DateTime(_startTicks, DateTimeKind.Utc);
         public DateTime EndTime => new DateTime(_endTicks, DateTimeKind.Utc);
         public DateTime LastUpdated => new DateTime(_lastUpdatedTicks, DateTimeKind.Utc);
+        public bool IsLive => _isLive;
 
+        private readonly IGQIProvider _gqiProvider;
         private readonly object _lock = new object();
         private readonly int _bucketCount;
         private readonly long _bucketTickSize;
         private readonly Queue<Bucket> _buckets;
-        private readonly LiveMetricReader _reader;
-        private readonly Timer _timer;
+
+        private LiveMetricReader _reader;
+        private Timer _timer;
 
         private Bucket _overflowBucket;
         private long _startTicks;
         private long _endTicks;
         private long _lastUpdatedTicks;
+        private bool _isLive = false;
 
         public LiveMetricCollection(IGQIProvider gqiProvider, ConfigCache configCache)
         {
+            _gqiProvider = gqiProvider;
+
             var config = configCache.GetConfig();
             _bucketCount = Math.Max(0, config.LiveMetricsHistory);
-            
+
+            _buckets = new Queue<Bucket>(_bucketCount);
+
             var refreshInterval = config.LiveMetricRefreshInterval;
             if (refreshInterval < MinRefreshInterval)
                 refreshInterval = MinRefreshInterval;
             _bucketTickSize = refreshInterval.Ticks;
-
-            _reader = new LiveMetricReader(gqiProvider.MetricsPath);
-            _timer = new Timer(Update, null, refreshInterval, refreshInterval);
-            _buckets = GetInitialBuckets();
         }
 
         public void Dispose()
@@ -60,41 +64,79 @@ namespace GQI
             }
         }
 
-        private Queue<Bucket> GetInitialBuckets()
+        public void Toggle()
         {
-            var lines = _reader.ReadLines();
+            Bucket[] bucketsToRemove = null;
+            Bucket[] bucketsToAdd = null;
 
-            UpdateTimeRange();
-
-            var buckets = Enumerable.Range(0, _bucketCount)
-                .Select(bucketIndex => new Bucket(GetBucketBounds(bucketIndex)))
-                .ToArray();
-
-            _overflowBucket = new Bucket(GetBucketBounds(_bucketCount));
-            foreach (var line in lines)
+            lock (_lock)
             {
-                var metric = MetricCollection.ParseQueryDurationMetric(line);
-                if (metric is null)
-                    continue;
-
-                var bucketIndex = GetBucketIndex(metric.Time.Ticks);
-                if (bucketIndex < 0)
+                if (_isLive)
                 {
-                    // Too old
-                    continue;
+                    Stop();
+                    _isLive = false;
                 }
-
-                if (bucketIndex >= _bucketCount)
+                else
                 {
-                    // Too new
-                    _overflowBucket.Metrics.Add(metric);
-                    continue;
+                    bucketsToRemove = Reset();
+                    bucketsToAdd = Start();
+                    _isLive = true;
                 }
-
-                buckets[bucketIndex].Metrics.Add(metric);
             }
 
-            return new Queue<Bucket>(buckets);
+            if (bucketsToRemove != null)
+            {
+                foreach (var bucket in bucketsToRemove)
+                {
+                    BucketRemoved?.Invoke(bucket.Key);
+                }
+            }
+
+            if (bucketsToAdd != null)
+            {
+                foreach (var bucket in bucketsToAdd)
+                {
+                    BucketAdded?.Invoke(bucket);
+                }
+            }
+
+            Updated?.Invoke();
+        }
+
+        private Bucket[] Reset()
+        {
+            var bucketsToRemove = _buckets.ToArray();
+            _buckets.Clear();
+            return bucketsToRemove;
+        }
+
+        private Bucket[] Start()
+        {
+            UpdateTimeRange();
+            _reader = new LiveMetricReader(_gqiProvider.MetricsPath);
+
+            _overflowBucket = new Bucket(GetBucketBounds(_bucketCount));
+            var bucketsToAdd = Enumerable.Range(0, _bucketCount)
+                .Select(bucketIndex => new Bucket(GetBucketBounds(bucketIndex)))
+                .ToArray();
+            foreach (var bucket in bucketsToAdd)
+            {
+                _buckets.Enqueue(bucket);
+            }
+
+            var refreshInterval = new TimeSpan(_bucketTickSize);
+            _timer = new Timer(Update, null, refreshInterval, refreshInterval);
+
+            return bucketsToAdd;
+        }
+
+        private void Stop()
+        {
+            _reader?.Dispose();
+            _reader = null;
+
+            _timer?.Dispose();
+            _timer = null;
         }
 
         private int GetBucketIndex(long metricTicks)
@@ -123,7 +165,7 @@ namespace GQI
             {
                 Update();
             }
-            catch (Exception ex)
+            catch
             {
                 // Prevent crashing
             }
@@ -131,7 +173,11 @@ namespace GQI
 
         private void Update()
         {
-            var lines = _reader.ReadLines();
+            var reader = _reader;
+            if (reader is null)
+                return;
+
+            var lines = reader.ReadLines();
             UpdateTimeRange();
 
             var currentBucket = _overflowBucket;
@@ -162,6 +208,9 @@ namespace GQI
             Bucket bucketToRemove = null;
             lock (_lock)
             {
+                if (!_isLive)
+                    return;
+
                 bucketToRemove = _buckets.Dequeue();
                 _buckets.Enqueue(currentBucket);
             }

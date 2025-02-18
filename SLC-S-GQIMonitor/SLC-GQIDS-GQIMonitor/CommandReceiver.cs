@@ -120,6 +120,13 @@ namespace GQI
                         _cache.Metrics.Clear();
                         _cache.MetricsAnalysis.Clear();
                         return "OK";
+                    case "toggle-live":
+                        using (var handle = _cache.LiveMetrics.GetHandle())
+                        {
+                            var liveMetrics = handle.Value;
+                            liveMetrics.Toggle();
+                        }
+                        return "OK";
                     default:
                         return "Unknown command";
                 }

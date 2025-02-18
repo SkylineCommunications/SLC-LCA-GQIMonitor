@@ -19,6 +19,7 @@ namespace GQI.DataSources
         public static readonly GQIDateTimeColumn _startTimeColumn = new GQIDateTimeColumn("Start time");
         public static readonly GQIDateTimeColumn _endTimeColumn = new GQIDateTimeColumn("End time");
         public static readonly GQIDateTimeColumn _lastUpdatedColumn = new GQIDateTimeColumn("Last updated");
+        public static readonly GQIBooleanColumn _isLiveColumn = new GQIBooleanColumn("Is live");
 
         public GQIColumn[] GetColumns()
         {
@@ -27,6 +28,7 @@ namespace GQI.DataSources
                 _startTimeColumn,
                 _endTimeColumn,
                 _lastUpdatedColumn,
+                _isLiveColumn,
             };
         }
 
@@ -64,6 +66,7 @@ namespace GQI.DataSources
                 new GQICell { Value = liveMetrics.StartTime },
                 new GQICell { Value = liveMetrics.EndTime },
                 new GQICell { Value = liveMetrics.LastUpdated },
+                new GQICell { Value = liveMetrics.IsLive },
             };
 
             return new GQIRow("0", cells);

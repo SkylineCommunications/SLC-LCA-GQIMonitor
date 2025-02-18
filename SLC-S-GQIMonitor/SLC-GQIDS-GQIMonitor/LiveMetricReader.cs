@@ -1,9 +1,7 @@
-﻿using GQI.Caches;
-using Skyline.DataMiner.Analytics.GenericInterface;
+﻿using Skyline.DataMiner.Analytics.GenericInterface;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace GQI
 {
@@ -12,21 +10,21 @@ namespace GQI
         private const string FilePattern = "metrics*.txt";
         private readonly object _lock = new object();
         private readonly FileSystemWatcher _directoryWatcher;
-        private readonly List<string> _newFilePaths;
+        private readonly HashSet<string> _changedFilePaths;
+        private readonly Dictionary<string, long> _fileSizes;
 
-        private long _lastFileSize = 0;
-        private string _lastFilePath = null;
         private bool _isDisposed = false;
 
         public LiveMetricReader(string metricsFolderPath)
         {
+            _changedFilePaths = new HashSet<string>();
+            _fileSizes = GetInitialFileSizes(metricsFolderPath);
+
             _directoryWatcher = new FileSystemWatcher(metricsFolderPath);
             _directoryWatcher.Filter = FilePattern;
-            _directoryWatcher.NotifyFilter = NotifyFilters.CreationTime;
-            _directoryWatcher.Created += OnNewFileCreated;
+            _directoryWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size;
+            _directoryWatcher.Changed += OnFileChanged;
             _directoryWatcher.EnableRaisingEvents = true;
-
-            _newFilePaths = GetInitialMetricFilePaths(metricsFolderPath);
         }
 
         public void Dispose()
@@ -38,18 +36,27 @@ namespace GQI
             _directoryWatcher.Dispose();
         }
 
-        private List<string> GetInitialMetricFilePaths(string metricsFolderPath)
+        private Dictionary<string, long> GetInitialFileSizes(string metricsFolderPath)
         {
-            return Directory.GetFiles(metricsFolderPath, FilePattern)
-                .OrderBy(File.GetLastWriteTimeUtc)
-                .ToList();
+            var fileSizes = new Dictionary<string, long>();
+
+            var filePaths = Directory.GetFiles(metricsFolderPath, FilePattern);
+            foreach (var filePath in filePaths)
+            {
+                if (!TryGetFileInfo(filePath, out var fileInfo))
+                    continue;
+
+                fileSizes[filePath] = fileInfo.Length;
+            }
+
+            return fileSizes;
         }
 
-        private void OnNewFileCreated(object sender, FileSystemEventArgs e)
+        private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
             lock (_lock)
             {
-                _newFilePaths.Add(e.FullPath);
+                _changedFilePaths.Add(e.FullPath);
             }
         }
 
@@ -61,13 +68,15 @@ namespace GQI
             var lines = new List<string>();
             lock (_lock)
             {
-                _lastFileSize = ReadLines(_lastFilePath, _lastFileSize, lines);
-                foreach (var filePath in _newFilePaths)
+                foreach (var filePath in _changedFilePaths)
                 {
-                    _lastFilePath = filePath;
-                    _lastFileSize = ReadLines(filePath, 0, lines);
+                    if (!_fileSizes.TryGetValue(filePath, out var oldFileSize))
+                        oldFileSize = 0;
+
+                    long newFileSize = ReadLines(filePath, oldFileSize, lines);
+                    _fileSizes[filePath] = newFileSize;
                 }
-                _newFilePaths.Clear();
+                _changedFilePaths.Clear();
             }
             return lines;
 
@@ -83,7 +92,9 @@ namespace GQI
                 if (!File.Exists(filePath))
                     return 0;
 
-                var fileInfo = new FileInfo(filePath);
+                if (!TryGetFileInfo(filePath, out var fileInfo))
+                    return 0;
+
                 var fileSize = fileInfo.Length;
                 if (fileSize <= offset)
                     return offset;
@@ -104,6 +115,20 @@ namespace GQI
             catch (Exception ex)
             {
                 throw new GenIfException($"Failed to read metrics", ex);
+            }
+        }
+
+        private static bool TryGetFileInfo(string filePath, out FileInfo fileInfo)
+        {
+            try
+            {
+                fileInfo = new FileInfo(filePath);
+                return true;
+            }
+            catch
+            {
+                fileInfo = null;
+                return false;
             }
         }
     }
