@@ -1,135 +1,126 @@
-﻿using Skyline.DataMiner.Analytics.GenericInterface;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using Skyline.DataMiner.Analytics.GenericInterface;
 
 namespace GQI
 {
-    internal sealed class LiveMetricReader : IDisposable
-    {
-        private const string FilePattern = "metrics*.txt";
-        private readonly object _lock = new object();
-        private readonly FileSystemWatcher _directoryWatcher;
-        private readonly HashSet<string> _changedFilePaths;
-        private readonly Dictionary<string, long> _fileSizes;
+	internal sealed class LiveMetricReader
+	{
+		private const int MaxFileRead = 3;
 
-        private bool _isDisposed = false;
+		private const string FilePattern = "metrics*.txt";
+		private readonly string _metricsFolderPath;
 
-        public LiveMetricReader(string metricsFolderPath)
-        {
-            _changedFilePaths = new HashSet<string>();
-            _fileSizes = GetInitialFileSizes(metricsFolderPath);
+		private Dictionary<string, long> _oldFileSizes;
+		private Dictionary<string, long> _newFileSizes;
 
-            _directoryWatcher = new FileSystemWatcher(metricsFolderPath);
-            _directoryWatcher.Filter = FilePattern;
-            _directoryWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size;
-            _directoryWatcher.Changed += OnFileChanged;
-            _directoryWatcher.EnableRaisingEvents = true;
-        }
+		public LiveMetricReader(string metricsFolderPath)
+		{
+			_metricsFolderPath = metricsFolderPath;
+			_oldFileSizes = GetFileSizes();
+			_newFileSizes = new Dictionary<string, long>();
+		}
 
-        public void Dispose()
-        {
-            if (_isDisposed)
-                return;
+		private IEnumerable<FileInfo> GetFiles()
+		{
+			var filePaths = Directory.GetFiles(_metricsFolderPath, FilePattern);
+			foreach (var filePath in filePaths)
+			{
+				if (TryGetFileInfo(filePath, out var fileInfo))
+					yield return fileInfo;
+			}
+		}
 
-            _isDisposed = true;
-            _directoryWatcher.Dispose();
-        }
+		private IEnumerable<FileInfo> GetMostRecentFiles()
+		{
+			return GetFiles()
+				.OrderByDescending(file => file.LastWriteTimeUtc)
+				.Take(MaxFileRead);
+		}
 
-        private Dictionary<string, long> GetInitialFileSizes(string metricsFolderPath)
-        {
-            var fileSizes = new Dictionary<string, long>();
+		private Dictionary<string, long> GetFileSizes()
+		{
+			try
+			{
+				var fileSizes = new Dictionary<string, long>();
 
-            var filePaths = Directory.GetFiles(metricsFolderPath, FilePattern);
-            foreach (var filePath in filePaths)
-            {
-                if (!TryGetFileInfo(filePath, out var fileInfo))
-                    continue;
+				var files = GetMostRecentFiles();
+				foreach (var file in files)
+				{
+					fileSizes[file.FullName] = file.Length;
+				}
 
-                fileSizes[filePath] = fileInfo.Length;
-            }
+				return fileSizes;
+			}
+			catch (Exception ex)
+			{
+				throw new GenIfException("Failed to initialize metric reader.", ex);
+			}
+		}
 
-            return fileSizes;
-        }
+		public List<string> ReadLines()
+		{
+			try
+			{
+				var lines = new List<string>();
 
-        private void OnFileChanged(object sender, FileSystemEventArgs e)
-        {
-            lock (_lock)
-            {
-                _changedFilePaths.Add(e.FullPath);
-            }
-        }
+				var files = GetMostRecentFiles();
 
-        public List<string> ReadLines()
-        {
-            if (_isDisposed)
-                throw new ObjectDisposedException(nameof(LiveMetricReader));
+				foreach (var file in files)
+				{
+					var filePath = file.FullName;
+					if (!_oldFileSizes.TryGetValue(filePath, out var oldFileSize))
+						oldFileSize = 0;
 
-            var lines = new List<string>();
-            lock (_lock)
-            {
-                foreach (var filePath in _changedFilePaths)
-                {
-                    if (!_fileSizes.TryGetValue(filePath, out var oldFileSize))
-                        oldFileSize = 0;
+					var newFileSize = file.Length;
+					_newFileSizes[filePath] = newFileSize;
 
-                    long newFileSize = ReadLines(filePath, oldFileSize, lines);
-                    _fileSizes[filePath] = newFileSize;
-                }
-                _changedFilePaths.Clear();
-            }
-            return lines;
+					if (newFileSize <= oldFileSize)
+						continue;
 
-        }
+					ReadLines(filePath, oldFileSize, lines);
+				}
 
-        private static long ReadLines(string filePath, long offset, List<string> lines)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(filePath))
-                    return 0;
+				(_oldFileSizes, _newFileSizes) = (_newFileSizes, _oldFileSizes);
+				_newFileSizes.Clear();
 
-                if (!File.Exists(filePath))
-                    return 0;
+				return lines;
+			}
+			catch (Exception ex)
+			{
+				throw new GenIfException($"Failed to read metrics", ex);
+			}
+		}
 
-                if (!TryGetFileInfo(filePath, out var fileInfo))
-                    return 0;
+		private static void ReadLines(string filePath, long offset, List<string> lines)
+		{
+			using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+			using (var reader = new StreamReader(stream))
+			{
+				stream.Seek(offset, SeekOrigin.Begin);
 
-                var fileSize = fileInfo.Length;
-                if (fileSize <= offset)
-                    return offset;
+				while (!reader.EndOfStream)
+				{
+					var line = reader.ReadLine();
+					lines.Add(line);
+				}
+			}
+		}
 
-                using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                using (var reader = new StreamReader(stream))
-                {
-                    stream.Seek(offset, SeekOrigin.Begin);
-
-                    while (!reader.EndOfStream)
-                    {
-                        var line = reader.ReadLine();
-                        lines.Add(line);
-                    }
-                }
-                return fileSize;
-            }
-            catch (Exception ex)
-            {
-                throw new GenIfException($"Failed to read metrics", ex);
-            }
-        }
-
-        private static bool TryGetFileInfo(string filePath, out FileInfo fileInfo)
-        {
-            try
-            {
-                fileInfo = new FileInfo(filePath);
-                return true;
-            }
-            catch
-            {
-                fileInfo = null;
-                return false;
-            }
-        }
-    }
+		private static bool TryGetFileInfo(string filePath, out FileInfo fileInfo)
+		{
+			try
+			{
+				fileInfo = new FileInfo(filePath);
+				return true;
+			}
+			catch
+			{
+				fileInfo = null;
+				return false;
+			}
+		}
+	}
 }

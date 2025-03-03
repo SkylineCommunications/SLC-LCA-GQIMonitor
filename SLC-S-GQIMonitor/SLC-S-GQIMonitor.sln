@@ -11,7 +11,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SLC-GQIDS-GQIMonitor", "SLC
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SLC-AS-GQIMonitor.CreateSnapshot", "SLC-AS-GQIMonitor.CreateSnapshot\SLC-AS-GQIMonitor.CreateSnapshot.csproj", "{8C5305A6-26F7-4465-8740-74287185249F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SLC-AS-GQIMonitor.SendCommand", "SLC-AS-GQIMonitor.SendCommand\SLC-AS-GQIMonitor.SendCommand.csproj", "{4FFB7483-BEDC-4C9E-92AB-CC049E97F38F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SLC-AS-GQIMonitor.SendCommand", "SLC-AS-GQIMonitor.SendCommand\SLC-AS-GQIMonitor.SendCommand.csproj", "{4FFB7483-BEDC-4C9E-92AB-CC049E97F38F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Internal", "Internal", "{FDB9ADF1-37CA-4B06-A659-9B685021B3B6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Code Analysis", "Code Analysis", "{7B25B58D-9465-466D-831A-B06797C61671}"
+	ProjectSection(SolutionItems) = preProject
+		Internal\Code Analysis\qaction-debug.ruleset = Internal\Code Analysis\qaction-debug.ruleset
+		Internal\Code Analysis\qaction-release.ruleset = Internal\Code Analysis\qaction-release.ruleset
+		Internal\Code Analysis\stylecop.json = Internal\Code Analysis\stylecop.json
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,6 +51,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7B25B58D-9465-466D-831A-B06797C61671} = {FDB9ADF1-37CA-4B06-A659-9B685021B3B6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E7D4FCFE-BBF6-4E6D-B3D1-0CE443274CDB}

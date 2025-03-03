@@ -2,6 +2,7 @@
 using GQIMonitor;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
@@ -53,7 +54,6 @@ namespace GQI
         public void Dispose()
         {
             _timer.Dispose();
-            _reader.Dispose();
         }
 
         public Bucket[] GetBuckets()
@@ -132,7 +132,6 @@ namespace GQI
 
         private void Stop()
         {
-            _reader?.Dispose();
             _reader = null;
 
             _timer?.Dispose();
@@ -163,7 +162,14 @@ namespace GQI
         {
             try
             {
-                Update();
+				try
+				{
+					Update();
+				}
+				catch (Exception ex)
+				{
+					Logger.Log($"Failed to update: {ex}");
+				}
             }
             catch
             {

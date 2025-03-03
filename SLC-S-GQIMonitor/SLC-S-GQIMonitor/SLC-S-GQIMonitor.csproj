@@ -1,24 +1,27 @@
-﻿<Project Sdk="Skyline.DataMiner.Sdk">
-	<PropertyGroup>
-		<TargetFramework>net48</TargetFramework>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	</PropertyGroup>
-	<PropertyGroup>
-		<DataMinerType>Package</DataMinerType>
-		<GenerateDataMinerPackage>True</GenerateDataMinerPackage>
-		<Version>1.0.4</Version>
-		<VersionComment>Pause and resume live metric updates</VersionComment>
-		<!-- Do NOT fill in the Organization Token here. This points to either an Environment Variable holding the organization token or a Visual Studio User Secret holding the token. -->
-		<CatalogPublishKeyName>skyline:sdk:catalogpublishtoken:skyline</CatalogPublishKeyName>
-		<CatalogDefaultDownloadKeyName>skyline:sdk:catalogdownloadtoken</CatalogDefaultDownloadKeyName>
-		<UserSecretsId>7676f6b8-d66c-4a55-8ffe-f854bfe7f928</UserSecretsId>
-	</PropertyGroup>
-	<ItemGroup>
-		<PackageReference Include="Skyline.DataMiner.Core.AppPackageInstaller" Version="2.0.4" />
-		<PackageReference Include="Skyline.DataMiner.Dev.Automation" Version="10.2.0.25" />
-		<PackageReference Include="Skyline.DataMiner.Utils.SecureCoding.Analyzers" Version="1.0.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Skyline.DataMiner.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DataMinerType>Package</DataMinerType>
+    <GenerateDataMinerPackage>True</GenerateDataMinerPackage>
+    <Version>1.0.4</Version>
+    <VersionComment>Pause and resume live metric updates</VersionComment>
+    <!-- Do NOT fill in the Organization Token here. This points to either an Environment Variable holding the organization token or a Visual Studio User Secret holding the token. -->
+    <CatalogPublishKeyName>skyline:sdk:catalogpublishtoken:skyline</CatalogPublishKeyName>
+    <CatalogDefaultDownloadKeyName>skyline:sdk:catalogdownloadtoken</CatalogDefaultDownloadKeyName>
+    <UserSecretsId>7676f6b8-d66c-4a55-8ffe-f854bfe7f928</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Skyline.DataMiner.Core.AppPackageInstaller" Version="2.0.4" />
+    <PackageReference Include="Skyline.DataMiner.Dev.Automation" Version="10.2.0.25" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Skyline.DataMiner.Utils.SecureCoding.Analyzers" Version="1.2.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 </Project>
