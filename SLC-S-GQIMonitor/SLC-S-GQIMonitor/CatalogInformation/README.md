@@ -10,7 +10,7 @@ Currently, the app offers 4 distinct pages.
 - Metric history: overview of all metrics available on the system
 - Application metrics: overview of the top 10 applications for each metric
 - User metrics: overview of the top 10 users for each metric
-- Extension logs: overview of the logs for each extension library
+- Extension logs: search and inspect log entries for each extension library
 
 
 Prerequisites
