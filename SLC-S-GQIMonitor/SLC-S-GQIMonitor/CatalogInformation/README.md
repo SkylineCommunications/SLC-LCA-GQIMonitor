@@ -10,7 +10,7 @@ Currently, the app offers 5 distinct pages.
 - __Metric history__: overview of all metrics available on the system
 - __Application metrics__: overview of the top 10 applications for each metric
 - __User metrics__: overview of the top 10 users for each metric
-- __Extension logs__: search and inspect log entries for each extension library.
-  - *Prerequisites: web version 10.5.9 or higher with GQI DxM*
+- __Extension logs__: search and inspect log entries for each extension library  
+ *Prerequisites: web version 10.5.9 or higher with GQI DxM*
 
 ![Screenshot](./Images/screenshot.png)
