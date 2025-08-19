@@ -65,6 +65,11 @@ namespace SLCASGQIMonitorVersionCheck
 			if (IsVersionGreaterOrEqual(actualVersion, requiredVersion))
 				return;
 
+			var webAppVersionParam = engine.GetScriptParam(3);
+
+			if (webAppVersionParam is null || string.IsNullOrEmpty(webAppVersionParam.Value))
+				return;
+
 			UIBuilder uiBuilder = new UIBuilder
 			{
 				RequireResponse = true,
@@ -72,9 +77,11 @@ namespace SLCASGQIMonitorVersionCheck
 				ColumnDefs = "a",
 			};
 
+			uiBuilder.Title = "Incorrect GQI Version";
+
 			UIBlockDefinition blockStaticText = new UIBlockDefinition();
 			blockStaticText.Type = UIBlockType.StaticText;
-			blockStaticText.Text = $"This page requires GQI version {requiredVersion}, is {actualVersion}";
+			blockStaticText.Text = $"This page requires DataMiner web app version {webAppVersionParam.Value}.";
 			blockStaticText.Height = 20;
 			blockStaticText.Width = 400;
 			blockStaticText.Row = 0;

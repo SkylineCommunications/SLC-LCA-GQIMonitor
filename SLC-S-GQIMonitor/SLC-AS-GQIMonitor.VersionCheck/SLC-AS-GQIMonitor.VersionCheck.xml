@@ -17,6 +17,9 @@
 		<ScriptParameter id="2" type="string" values="">
 			<Description>Required version</Description>
 		</ScriptParameter>
+		<ScriptParameter id="3" type="string" values="">
+			<Description>Web app version</Description>
+		</ScriptParameter>
 	</Parameters>
 
 	<Script>
