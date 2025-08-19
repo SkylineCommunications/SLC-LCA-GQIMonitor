@@ -15,10 +15,10 @@
 
 	<Parameters>
 		<ScriptParameter id="2" type="string" values="">
-			<Description>Required version</Description>
+			<Description>Required gqi version</Description>
 		</ScriptParameter>
 		<ScriptParameter id="3" type="string" values="">
-			<Description>Web app version</Description>
+			<Description>Required web version</Description>
 		</ScriptParameter>
 	</Parameters>
 

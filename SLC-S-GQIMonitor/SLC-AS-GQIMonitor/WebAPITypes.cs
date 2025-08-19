@@ -2,6 +2,15 @@
 
 namespace GQIMonitor
 {
+	public sealed class DMAGenericInterfaceFeatureInfo
+	{
+		[JsonProperty("SemanticVersion")]
+		public string SemanticVersion { get; set; }
+
+		[JsonProperty("IsUsingDxM")]
+		public bool IsUsingDxM { get; set; }
+	}
+
 	internal sealed class WebAPIResponse<T>
 	{
 		[JsonProperty("d")]
@@ -58,11 +67,5 @@ namespace GQIMonitor
 	{
 		[JsonProperty("featureNames")]
 		public string[] FeatureNames { get; set; }
-	}
-
-	internal sealed class DMAGenericInterfaceFeatureInfo
-	{
-		[JsonProperty("SemanticVersion")]
-		public string SemanticVersion { get; set; }
 	}
 }

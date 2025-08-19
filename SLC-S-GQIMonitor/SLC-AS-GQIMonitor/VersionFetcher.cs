@@ -6,12 +6,12 @@ namespace GQIMonitor
 {
 	public sealed class VersionFetcher
 	{
-		public string GetGQIVersion(IConnection connection)
+		public static DMAGenericInterfaceFeatureInfo GetGQIFeatureInfo(IConnection connection)
 		{
-			return GetGQIVersionAsync(connection).GetAwaiter().GetResult();
+			return GetGQIFeatureInfoAsync(connection).GetAwaiter().GetResult();
 		}
 
-		public async Task<string> GetGQIVersionAsync(IConnection connection)
+		public static async Task<DMAGenericInterfaceFeatureInfo> GetGQIFeatureInfoAsync(IConnection connection)
 		{
 			var webAPI = new WebAPI(connection);
 			var request = new GetFeatureInfoRequest
@@ -21,7 +21,7 @@ namespace GQIMonitor
 			var endpoint = $"{webAPI.WebAPIOrigin}/api/v1/internal.asmx/GetFeatureInfo";
 			var featureInfos = await webAPI.SendWebAPIRequest<DMAGenericInterfaceFeatureInfo[]>(endpoint, request);
 
-			return featureInfos.FirstOrDefault().SemanticVersion;
+			return featureInfos.FirstOrDefault();
 		}
 	}
 }
