@@ -12,5 +12,7 @@ Currently, the app offers 5 distinct pages.
 - __User metrics__: overview of the top 10 users for each metric
 - __Extension logs__: search and inspect log entries for each extension library  
  *Prerequisites: web version 10.5.9 or higher with GQI DxM*
+- __Ad hoc data source metrics__: overview of performance and usage metrics for each _active_ ad hoc data source on the system.  
+ *Prerequisites: web version 10.5.9 or higher with GQI DxM*
 
 ![Screenshot](./Images/screenshot.png)
