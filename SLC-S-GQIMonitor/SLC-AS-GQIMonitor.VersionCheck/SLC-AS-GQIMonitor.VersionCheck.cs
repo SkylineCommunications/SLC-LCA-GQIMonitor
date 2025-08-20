@@ -1,10 +1,10 @@
-using System;
-using GQIMonitor;
-using Skyline.DataMiner.Automation;
-using Skyline.DataMiner.Net;
-
 namespace SLCASGQIMonitorVersionCheck
 {
+	using System;
+	using GQIMonitor;
+	using Skyline.DataMiner.Automation;
+	using Skyline.DataMiner.Net;
+
 	/// <summary>
 	/// Represents a DataMiner Automation script.
 	/// </summary>
@@ -59,17 +59,18 @@ namespace SLCASGQIMonitorVersionCheck
 
 			if (string.IsNullOrEmpty(actualVersion))
 			{
+				ShowUI(engine, "Version check failed", "We couldn't verify if this page is supported. Please ensure you have:", false);
 				return;
 			}
 
 			if (IsVersionGreaterOrEqual(actualVersion, requiredVersion))
 				return;
 
-			var webAppVersionParam = engine.GetScriptParam(3);
+			ShowUI(engine, "Unsupported version", "To access this page, you need: ", featureInfo.IsUsingDxM);
+		}
 
-			if (webAppVersionParam is null || string.IsNullOrEmpty(webAppVersionParam.Value))
-				return;
-
+		private void ShowUI(IEngine engine, string title, string subTitle, bool hasDxM)
+		{
 			UIBuilder uiBuilder = new UIBuilder
 			{
 				RequireResponse = true,
@@ -77,18 +78,18 @@ namespace SLCASGQIMonitorVersionCheck
 				ColumnDefs = "a",
 			};
 
-			uiBuilder.Title = "Unsupported GQI version";
+			uiBuilder.Title = title;
 
 			UIBlockDefinition blockStaticText = new UIBlockDefinition();
 			blockStaticText.Type = UIBlockType.StaticText;
-			blockStaticText.Text = $"To access this page, you need: ";
+			blockStaticText.Text = subTitle;
 			blockStaticText.Height = 20;
 			blockStaticText.Width = 400;
 			blockStaticText.Row = 0;
 			blockStaticText.Column = 0;
 			uiBuilder.AppendBlock(blockStaticText);
 
-			if (!featureInfo.IsUsingDxM)
+			if (!hasDxM)
 			{
 				UIBlockDefinition blockDxMText = new UIBlockDefinition();
 				blockDxMText.Type = UIBlockType.StaticText;
@@ -99,6 +100,11 @@ namespace SLCASGQIMonitorVersionCheck
 				blockDxMText.Column = 0;
 				uiBuilder.AppendBlock(blockDxMText);
 			}
+
+			var webAppVersionParam = engine.GetScriptParam(3);
+
+			if (webAppVersionParam is null || string.IsNullOrEmpty(webAppVersionParam.Value))
+				return;
 
 			UIBlockDefinition blockVersionText = new UIBlockDefinition();
 			blockVersionText.Type = UIBlockType.StaticText;
