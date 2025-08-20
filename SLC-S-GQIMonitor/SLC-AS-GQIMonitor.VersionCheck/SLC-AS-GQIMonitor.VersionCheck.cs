@@ -136,7 +136,6 @@ namespace SLCASGQIMonitorVersionCheck
 
 			try
 			{
-				throw new Exception();
 				featureInfo = VersionFetcher.GetGQIFeatureInfo(connection);
 				version = featureInfo.SemanticVersion;
 			}
