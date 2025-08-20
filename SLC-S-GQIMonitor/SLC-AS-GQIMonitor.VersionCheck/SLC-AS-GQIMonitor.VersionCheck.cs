@@ -78,6 +78,8 @@ namespace SLCASGQIMonitorVersionCheck
 				ColumnDefs = "a",
 			};
 
+			uiBuilder.SkipAbortConfirmation = true;
+
 			uiBuilder.Title = title;
 
 			UIBlockDefinition blockStaticText = new UIBlockDefinition();
@@ -134,6 +136,7 @@ namespace SLCASGQIMonitorVersionCheck
 
 			try
 			{
+				throw new Exception();
 				featureInfo = VersionFetcher.GetGQIFeatureInfo(connection);
 				version = featureInfo.SemanticVersion;
 			}

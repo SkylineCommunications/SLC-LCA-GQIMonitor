@@ -11,7 +11,7 @@
     <VersionComment>Initial Version</VersionComment>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Skyline.DataMiner.Dev.Automation" Version="10.2.0.25" />
+    <PackageReference Include="Skyline.DataMiner.Dev.Automation" Version="10.5.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SLC-AS-GQIMonitor\SLC-AS-GQIMonitor.csproj" />
