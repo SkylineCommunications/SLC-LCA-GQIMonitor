@@ -56,7 +56,7 @@ documentation_url:
 #   The name is required; max 256 characters.
 #   The email and URL are optional, and should be in valid email/URL formats.
 owners:
-  - name: 'RGE'
+  - name: 'Ronald Gerard'
 # [Optional]
 # Tags that allow you to categorize your Catalog items.
 #   Max number of tags: 5
@@ -64,5 +64,4 @@ owners:
 #   Cannot contain newlines.
 #   Cannot contain leading or trailing whitespace characters.
 tags:
-  - dataminer
-  - gqi 
+  - GQI 

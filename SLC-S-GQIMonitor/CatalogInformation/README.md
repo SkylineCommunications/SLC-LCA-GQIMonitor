@@ -1,18 +1,28 @@
 # GQI Monitor
 
-A low-code app that allows you to monitor and analyze the performance of GQI queries on the system including:
-- The number of queries executed
-- The number of active users
-- The maximum and average duration of queries
+## About
 
-Currently, the app offers 5 distinct pages.
-- __Live monitor__: metrics of the last 15 minutes updating every 10 seconds
-- __Metric history__: overview of all metrics available on the system
-- __Application metrics__: overview of the top 10 applications for each metric
-- __User metrics__: overview of the top 10 users for each metric
-- __Extension logs__: search and inspect log entries for each extension library  
- *Prerequisites: web version 10.5.9 or higher with GQI DxM*
-- __Ad hoc data source metrics__: overview of performance and usage metrics for each _active_ ad hoc data source on the system.  
- *Prerequisites: web version 10.5.9 or higher with GQI DxM*
+**GQI Monitor** empowers users with clear, real-time visibility into the health and performance of their GQI service. By surfacing actionable insights and key metrics, it helps you proactively address issues, optimize query performance, and maximize the value of your GQI environment.
 
-![Screenshot](./Images/screenshot.png)
+## Key Features
+
+- **Monitor** real-time GQI service health and performance with live metrics.
+- **Analyze** query performance, including total queries, active users, and query durations.
+- **Track** usage of GQI extensions and ad hoc data sources.
+- **Inspect** extension logs for troubleshooting and auditing.
+
+![Extension Logs](./Images/ExtensionLogs.png)
+
+## Use Cases
+
+- Proactively detect and resolve GQI service bottlenecks before they impact users.
+- Identify top users and applications driving query load.
+- Audit extension library activity and troubleshoot issues using detailed logs.
+- Monitor ad hoc data source performance to ensure optimal system operation.
+
+![Metric History](./Images/MetricHistory.png)
+
+## Prerequisites
+
+- DataMiner Web version **10.5.0** or higher is required to use GQI Monitor.
+- For the **Extension Logs** and **Ad Hoc Data Source Metrics** pages, DataMiner Web version **10.5.9** or higher with **GQI DxM** enabled is required.
