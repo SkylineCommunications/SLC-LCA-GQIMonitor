@@ -24,5 +24,5 @@
 
 ## Prerequisites
 
-- DataMiner Web version **10.5.0** or higher is required to use GQI Monitor.
-- For the **Extension Logs** and **Ad Hoc Data Source Metrics** pages, DataMiner Web version **10.5.9** or higher with **GQI DxM** enabled is required.
+- DataMiner Web version **10.5.0** or higher and **GQI DxM** is required to use GQI Monitor.
+- For the **Extension Logs** and **Ad Hoc Data Source Metrics** pages, DataMiner Web version **10.5.9** or higher with **GQI DxM** enabled is required. Additionally, only users with the **Admin tools** permission can access the data.
