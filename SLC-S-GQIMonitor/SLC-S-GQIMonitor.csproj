@@ -7,9 +7,9 @@
   <PropertyGroup>
     <DataMinerType>Package</DataMinerType>
     <GenerateDataMinerPackage>True</GenerateDataMinerPackage>
-    <Version>1.0.7</Version>
-	<MinimumRequiredDmVersion>10.5.0.0-15485</MinimumRequiredDmVersion> <!-- Minimum version is 10.5.0.0 CU0, the lowest version that supports the GQI DxM. -->
-    <VersionComment>Added ad hoc data source metrics page.</VersionComment>
+    <Version>1.6.0</Version>
+	<MinimumRequiredDmVersion>10.6.0.0-16498</MinimumRequiredDmVersion> <!-- Minimum version is 10.5.0.0 CU0, the lowest version that supports the GQI DxM. -->
+    <VersionComment>Cleaned up the application.</VersionComment>
     <!-- Do NOT fill in the Organization Token here. This points to either an Environment Variable holding the organization token or a Visual Studio User Secret holding the token. -->
     <CatalogPublishKeyName>skyline:sdk:catalogpublishtoken:skyline</CatalogPublishKeyName>
     <CatalogDefaultDownloadKeyName>skyline:sdk:catalogdownloadtoken</CatalogDefaultDownloadKeyName>
