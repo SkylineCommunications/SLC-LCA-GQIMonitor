@@ -17,7 +17,7 @@
     <ProjectReference Include="..\SLC-AS-GQIMonitor\SLC-AS-GQIMonitor.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Skyline.DataMiner.Utils.SecureCoding.Analyzers" Version="1.2.3">
+    <PackageReference Include="Skyline.DataMiner.Utils.SecureCoding.Analyzers" Version="2.2.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
