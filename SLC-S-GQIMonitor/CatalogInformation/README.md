@@ -29,6 +29,7 @@
 
 For specific features, additional prerequisites apply:
 
+- **Active sessions**: DataMiner Web version **10.6.3** and the **Admin tools** permission.
 - **Extension libraries**: DataMiner Web version **10.5.11** and the **Admin tools** permission.
 - **Extension logs**: DataMiner Web version **10.5.9** and the **Admin tools** permission.
 - **Ad hoc data source metrics**: DataMiner Web version **10.5.9** and the **Admin tools** permission.
