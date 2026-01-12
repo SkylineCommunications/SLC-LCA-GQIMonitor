@@ -14,12 +14,11 @@
 		private GQIColumn _queryNameColumn;
 		private GQIStringColumn _appColumn = new GQIStringColumn("App");
 
-		private GQIDMS _dms;
-		private IGQILogger _logger;
+		private AppNameConverter _appNameConverter;
 
 		public OnInitOutputArgs OnInit(OnInitInputArgs args)
 		{
-			AppInfoConverter.RefreshApplicationsCache(args.DMS, args.Logger);
+			_appNameConverter = new AppNameConverter(args.DMS, args.Logger);
 
 			return default;
 		}
@@ -47,7 +46,7 @@
 		public void HandleRow(GQIEditableRow row)
 		{
 			var queryTag = row.GetValue<string>(_queryNameColumn);
-			row.SetValue(_appColumn, AppInfoConverter.GetAppName(queryTag));
+			row.SetValue(_appColumn, _appNameConverter.GetAppNameByTag(queryTag));
 		}
 	}
 }

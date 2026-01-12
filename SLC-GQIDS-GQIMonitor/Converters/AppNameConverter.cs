@@ -5,9 +5,15 @@
 	using GQIMonitor;
 	using Skyline.DataMiner.Analytics.GenericInterface;
 
-	internal static class AppInfoConverter
+	internal class AppNameConverter
 	{
-		private static Dictionary<string, Application> _applications = null;
+		private Dictionary<string, Application> _applications = null;
+
+		public AppNameConverter(GQIDMS dms, IGQILogger logger)
+		{
+			_applications = Cache.Instance.Applications
+				.GetApplications(dms, logger);
+		}
 
 		public static string GetAppId(string queryTag)
 		{
@@ -20,13 +26,7 @@
 			return queryTag.Substring(4, 36);
 		}
 
-		public static void RefreshApplicationsCache(GQIDMS dms, IGQILogger logger)
-		{
-			_applications = Cache.Instance.Applications
-				.GetApplications(dms, logger);
-		}
-
-		public static string GetAppName(string queryTag)
+		public string GetAppNameByTag(string queryTag)
 		{
 			if (_applications is null)
 				return "<Other>";
@@ -37,6 +37,18 @@
 			if (_applications.TryGetValue(appId, out var app))
 				return app.Name;
 
+			return "<Other>";
+		}
+
+		public string GetAppNameById(string appId)
+		{
+			if (_applications is null)
+				return "<Other>";
+
+			if (appId is null)
+				return "<Other>";
+			if (_applications.TryGetValue(appId, out var app))
+				return app.Name;
 			return "<Other>";
 		}
 	}

@@ -13,10 +13,14 @@ namespace GQI.DataSources
 		private GQIDMS _dms;
 		private IGQILogger _logger;
 
+		private AppNameConverter _appNameConverter;
+
 		public OnInitOutputArgs OnInit(OnInitInputArgs args)
 		{
 			_dms = args.DMS;
 			_logger = args.Logger;
+
+			_appNameConverter = new AppNameConverter(_dms, _logger);
 
 			return default;
 		}
@@ -129,8 +133,6 @@ namespace GQI.DataSources
 
 		public GQIPage GetNextPage(GetNextPageInputArgs args)
 		{
-			AppInfoConverter.RefreshApplicationsCache(_dms, _logger);
-
 			var filter = new MetricsAnalysisCache.Options
 			{
 				StartTime = _startTime,
@@ -171,7 +173,7 @@ namespace GQI.DataSources
 
 		private GQIRow ToRow(KeyValuePair<string, MetricsAnalysisCache.Result> result)
 		{
-			var appName = AppInfoConverter.GetAppName(result.Key);
+			var appName = _appNameConverter.GetAppNameById(result.Key);
 
 			var cells = new[]
 			{

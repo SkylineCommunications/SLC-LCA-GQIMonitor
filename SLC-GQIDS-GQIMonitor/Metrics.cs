@@ -26,7 +26,7 @@ namespace GQI
 		{
 			set
 			{
-				_app = AppInfoConverter.GetAppId(value);
+				_app = AppNameConverter.GetAppId(value);
 			}
 		}
 
