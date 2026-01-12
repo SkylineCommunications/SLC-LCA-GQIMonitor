@@ -6,11 +6,13 @@
 
 ## Key Features
 
+- **View** active GQI sessions, including user and application details.
 - **Monitor** real-time GQI service health and performance with live metrics.
 - **Analyze** query performance, including total queries, active users, and query durations.
 - **Track** usage of GQI extensions and ad hoc data sources.
 - **Inspect** extension logs for troubleshooting and auditing.
 
+![Active Sessions](./Images/ActiveSessions.png)
 ![Extension Logs](./Images/ExtensionLogs.png)
 
 ## Use Cases

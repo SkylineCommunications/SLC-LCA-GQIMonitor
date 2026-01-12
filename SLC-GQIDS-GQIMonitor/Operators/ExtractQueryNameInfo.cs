@@ -1,80 +1,53 @@
 ﻿namespace GQI.Operators
 {
-	using System;
-	using System.Collections.Generic;
-	using GQI.Caches;
-	using GQIMonitor;
+	using GQI.Converters;
 	using Skyline.DataMiner.Analytics.GenericInterface;
 
 	[GQIMetaData(Name = "GQI Monitor - ExtractQueryNameInfo")]
 	public sealed class ExtractQueryNameInfoOperator : IGQIColumnOperator, IGQIRowOperator, IGQIInputArguments, IGQIOnInit
-    {
-        private static readonly GQIArgument<GQIColumn> _columnArg = new GQIColumnDropdownArgument("Query name column")
-        {
-            IsRequired = true,
-        };
-
-        private GQIColumn _queryNameColumn;
-        private GQIStringColumn _appColumn = new GQIStringColumn("App");
-
-        private Lazy<Dictionary<string, Application>> _applications;
-
-        private GQIDMS _dms;
-        private IGQILogger _logger;
-
-        public OnInitOutputArgs OnInit(OnInitInputArgs args)
+	{
+		private static readonly GQIArgument<GQIColumn> _columnArg = new GQIColumnDropdownArgument("Query name column")
 		{
-			_dms = args.DMS;
-			_logger = args.Logger;
+			IsRequired = true,
+		};
 
-			_applications = new Lazy<Dictionary<string, Application>>(GetApplications);
+		private GQIColumn _queryNameColumn;
+		private GQIStringColumn _appColumn = new GQIStringColumn("App");
+
+		private GQIDMS _dms;
+		private IGQILogger _logger;
+
+		public OnInitOutputArgs OnInit(OnInitInputArgs args)
+		{
+			AppInfoConverter.RefreshApplicationsCache(args.DMS, args.Logger);
 
 			return default;
 		}
 
-        public GQIArgument[] GetInputArguments()
-        {
-            return new GQIArgument[]
-            {
-                _columnArg,
-            };
-        }
-
-        public OnArgumentsProcessedOutputArgs OnArgumentsProcessed(OnArgumentsProcessedInputArgs args)
-        {
-            _queryNameColumn = args.GetArgumentValue(_columnArg);
-
-            return default;
-        }
-
-        public void HandleColumns(GQIEditableHeader header)
-        {
-            header.AddColumns(_appColumn);
+		public GQIArgument[] GetInputArguments()
+		{
+			return new GQIArgument[]
+			{
+				_columnArg,
+			};
 		}
 
-        public void HandleRow(GQIEditableRow row)
+		public OnArgumentsProcessedOutputArgs OnArgumentsProcessed(OnArgumentsProcessedInputArgs args)
 		{
-			var queryName = row.GetValue<string>(_queryNameColumn);
-			var queryData = queryName.Split('/');
+			_queryNameColumn = args.GetArgumentValue(_columnArg);
 
-			if (queryData[0] == "app")
-			{
-				var applications = _applications.Value;
-				if (applications.TryGetValue(queryData[1], out Application app))
-				{
-					row.SetValue(_appColumn, app.Name);
-				}
-			}
-			else
-			{
-				row.SetValue(_appColumn, "<Other>");
-			}
+			return default;
 		}
 
-        private Dictionary<string, Application> GetApplications()
+		public void HandleColumns(GQIEditableHeader header)
 		{
-			return Cache.Instance.Applications
-				.GetApplications(_dms, _logger);
+			header.AddColumns(_appColumn);
+		}
+
+		public void HandleRow(GQIEditableRow row)
+		{
+			var queryTag = row.GetValue<string>(_queryNameColumn);
+			row.SetValue(_appColumn, AppInfoConverter.GetAppName(queryTag));
 		}
 	}
 }
