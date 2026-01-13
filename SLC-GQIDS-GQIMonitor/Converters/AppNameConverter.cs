@@ -34,9 +34,6 @@
 
 		public string GetAppNameById(string appId)
 		{
-			if (_applications is null)
-				return "<Other>";
-
 			if (appId is null)
 				return "<Other>";
 			if (_applications.TryGetValue(appId, out var app))
