@@ -6,11 +6,13 @@
 
 ## Key Features
 
+- **View** active GQI sessions, including user and application details.
 - **Monitor** real-time GQI service health and performance with live metrics.
 - **Analyze** query performance, including total queries, active users, and query durations.
 - **Track** usage of GQI extensions and ad hoc data sources.
 - **Inspect** extension logs for troubleshooting and auditing.
 
+![Active Sessions](./Images/ActiveSessions.png)
 ![Extension Logs](./Images/ExtensionLogs.png)
 
 ## Use Cases
@@ -29,6 +31,7 @@
 
 For specific features, additional prerequisites apply:
 
+- **Active sessions**: DataMiner Web version **10.6.3** and the **Admin tools** permission.
 - **Extension libraries**: DataMiner Web version **10.5.11** and the **Admin tools** permission.
 - **Extension logs**: DataMiner Web version **10.5.9** and the **Admin tools** permission.
 - **Ad hoc data source metrics**: DataMiner Web version **10.5.9** and the **Admin tools** permission.
